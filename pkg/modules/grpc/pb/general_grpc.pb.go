@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.13.0
-// source: pkg/modules/grpc/proto/general.proto
+// source: github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto
 
 package pb
 
@@ -101,5 +101,5 @@ var HelloService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/modules/grpc/proto/general.proto",
+	Metadata: "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto",
 }
