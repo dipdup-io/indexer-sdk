@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "modules/grpc/pb";
+option go_package = "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb";
 
 service HelloService {
     rpc Hello(HelloRequest) returns (HelloResponse);
