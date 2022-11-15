@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "modules/grpc/pb";
+
+service HelloService {
+    rpc Hello(HelloRequest) returns (HelloResponse);
+}
+
+message HelloRequest {}
+
+message HelloResponse {
+    string id = 1;
+}
+
+message DefaultRequest {
+    string id = 1;
+}
+
+message Message {
+    string message = 1;
+}
+
+enum SortOrder {
+    ASC = 0;
+    DESC = 1;
+}
+
+message Page {
+    uint64 limit = 1;
+    uint64 offset = 2;
+    SortOrder order = 3;
+}

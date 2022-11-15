@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/dipdup-net/indexer-sdk/messages"
+	"github.com/dipdup-net/indexer-sdk/pkg/messages"
 )
 
 func main() {
