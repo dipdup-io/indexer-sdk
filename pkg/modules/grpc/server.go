@@ -26,6 +26,8 @@ type Server struct {
 	users    map[string]struct{}
 	useresMx sync.RWMutex
 
+	server *gogrpc.Server
+
 	wg *sync.WaitGroup
 }
 
@@ -38,12 +40,27 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Server{
+	module := &Server{
 		bind:       cfg.Bind,
 		Subscriber: subscriber,
 		users:      make(map[string]struct{}),
 		wg:         new(sync.WaitGroup),
-	}, nil
+	}
+	module.server = gogrpc.NewServer(
+		gogrpc.StatsHandler(module),
+		gogrpc.KeepaliveParams(
+			keepalive.ServerParameters{
+				Time:    20 * time.Second,
+				Timeout: 10 * time.Second,
+			},
+		),
+		gogrpc.KeepaliveEnforcementPolicy(
+			keepalive.EnforcementPolicy{
+				MinTime:             10 * time.Second,
+				PermitWithoutStream: true,
+			},
+		))
+	return module, nil
 }
 
 // Start - starts server module
@@ -62,21 +79,7 @@ func (module *Server) grpc(ctx context.Context) {
 		log.Err(err).Msg("net.Listen")
 		return
 	}
-	grpcServer := gogrpc.NewServer(
-		gogrpc.StatsHandler(module),
-		gogrpc.KeepaliveParams(
-			keepalive.ServerParameters{
-				Time:    20 * time.Second,
-				Timeout: 10 * time.Second,
-			},
-		),
-		gogrpc.KeepaliveEnforcementPolicy(
-			keepalive.EnforcementPolicy{
-				MinTime:             10 * time.Second,
-				PermitWithoutStream: true,
-			},
-		))
-	if err := grpcServer.Serve(listener); err != nil {
+	if err := module.server.Serve(listener); err != nil {
 		log.Err(err).Msg("grpcServer.Serve")
 	}
 }
@@ -86,6 +89,7 @@ func (module *Server) Close() error {
 	if err := module.Subscriber.Close(); err != nil {
 		return err
 	}
+	module.server.Stop()
 	return nil
 }
 
@@ -144,4 +148,9 @@ func (module *Server) HandleConn(ctx context.Context, s stats.ConnStats) {
 		}
 		module.useresMx.Unlock()
 	}
+}
+
+// Server - returns current grpc.Server to register handlers
+func (module *Server) Server() *gogrpc.Server {
+	return module.server
 }
