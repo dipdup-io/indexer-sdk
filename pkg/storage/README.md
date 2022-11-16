@@ -65,3 +65,7 @@ type Transaction interface {
 ## Implementations
 
 Now only one implementation is avalable. It's Postgres. It can be found [here](/pkg/storage/postgres/).
+
+## Usage
+
+Example of usage can be found [here](/examples/storage/)
