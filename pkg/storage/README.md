@@ -28,8 +28,6 @@ type Table[M Model] interface {
 	Save(ctx context.Context, m M) error
 	Update(ctx context.Context, m M) error
 	List(ctx context.Context, limit, offset uint64, order SortOrder) ([]M, error)
-
-	DB() *pg.DB
 	IsNoRows(err error) bool
 }
 ```

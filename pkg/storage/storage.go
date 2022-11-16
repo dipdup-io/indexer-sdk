@@ -2,8 +2,6 @@ package storage
 
 import (
 	"context"
-
-	"github.com/go-pg/pg/v10"
 )
 
 // SortOrder - asc or desc
@@ -22,7 +20,6 @@ type Table[M Model] interface {
 	Update(ctx context.Context, m M) error
 	List(ctx context.Context, limit, offset uint64, order SortOrder) ([]M, error)
 
-	DB() *pg.DB
 	IsNoRows(err error) bool
 }
 
