@@ -1,0 +1,15 @@
+on:
+  push:
+
+name: Tests
+jobs:
+  golangci:
+    name: Linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2.3.0
+        with:
+          version: v1.49.0
+          args: --timeout=2m --go=1.19
