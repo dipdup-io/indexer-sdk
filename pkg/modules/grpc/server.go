@@ -2,16 +2,17 @@ package grpc
 
 import (
 	"context"
+	"io"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/stats"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/messages"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
+	"google.golang.org/grpc"
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -19,12 +20,8 @@ import (
 // Server - basic server structure which implemented module interface and handle stats endpoints.
 type Server struct {
 	*messages.Subscriber
-	pb.UnimplementedHelloServiceServer
 
 	bind string
-
-	users    map[string]struct{}
-	useresMx sync.RWMutex
 
 	server *gogrpc.Server
 
@@ -36,18 +33,14 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 	if cfg == nil {
 		return nil, errors.New("configuration structure of gRPC server is nil")
 	}
-	subscriber, err := messages.NewSubscriber()
-	if err != nil {
-		return nil, err
-	}
+	subscriber := messages.NewSubscriber()
 	module := &Server{
 		bind:       cfg.Bind,
 		Subscriber: subscriber,
-		users:      make(map[string]struct{}),
 		wg:         new(sync.WaitGroup),
 	}
 	module.server = gogrpc.NewServer(
-		gogrpc.StatsHandler(module),
+		gogrpc.StreamInterceptor(subscriptionStreamServerInterceptor()),
 		gogrpc.KeepaliveParams(
 			keepalive.ServerParameters{
 				Time:    20 * time.Second,
@@ -93,64 +86,60 @@ func (module *Server) Close() error {
 	return nil
 }
 
-////////////////////////////////////////////////
-//////////////    HANDLERS    //////////////////
-////////////////////////////////////////////////
-
-// Hello - implementation server handshake endpoint
-func (module *Server) Hello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloResponse, error) {
-	id := ctx.Value(clientID)
-	if id == nil {
-		return nil, errors.New("unknown client")
-	}
-
-	return &pb.HelloResponse{
-		Id: id.(string),
-	}, nil
-}
-
-////////////////////////////////////////////////
-////////////////    STATS    ///////////////////
-////////////////////////////////////////////////
-
-// TagRPC -
-func (module *Server) TagRPC(ctx context.Context, info *stats.RPCTagInfo) context.Context {
-	return ctx
-}
-
-// HandleRPC -
-func (module *Server) HandleRPC(ctx context.Context, s stats.RPCStats) {}
-
-// TagConn -
-func (module *Server) TagConn(ctx context.Context, info *stats.ConnTagInfo) context.Context {
-	id, err := randomString(32)
-	if err != nil {
-		log.Err(err).Msg("invalid random string")
-	}
-	return context.WithValue(ctx, clientID, id)
-}
-
-// HandleConn -
-func (module *Server) HandleConn(ctx context.Context, s stats.ConnStats) {
-	id := ctx.Value(clientID).(string)
-
-	switch s.(type) {
-	case *stats.ConnEnd:
-		module.useresMx.Lock()
-		{
-			delete(module.users, id)
-		}
-		module.useresMx.Unlock()
-	case *stats.ConnBegin:
-		module.useresMx.Lock()
-		{
-			module.users[id] = struct{}{}
-		}
-		module.useresMx.Unlock()
-	}
-}
-
 // Server - returns current grpc.Server to register handlers
 func (module *Server) Server() *gogrpc.Server {
 	return module.server
+}
+
+// ServerStream -
+type ServerStream[T any] interface {
+	Send(T) error
+	grpc.ServerStream
+}
+
+// DefaultSubscribeOn - default subscribe server handler
+func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P]) error {
+	ctx := stream.Context()
+
+	subscriptionID, err := GetSubscriptionID(ctx)
+	if err != nil {
+		return err
+	}
+	subscriptions.Add(subscriptionID, subscription)
+
+	var end bool
+	for !end {
+		select {
+		case <-ctx.Done():
+			end = true
+		case msg := <-subscription.Listen():
+			if err := stream.Send(msg); err != nil {
+				if err == io.EOF {
+					end = true
+				} else {
+					log.Err(err).Msg("sending message error")
+				}
+			}
+		}
+	}
+
+	return subscriptions.Remove(subscriptionID)
+}
+
+// DefaultUnsubscribe - default unsubscribe server handler
+func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P]) (*pb.UnsubscribeResponse, error) {
+	subscriptionID, err := GetSubscriptionID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := subscriptions.Remove(subscriptionID); err != nil {
+		return nil, err
+	}
+
+	return &pb.UnsubscribeResponse{
+		Id: subscriptionID,
+		Response: &pb.Message{
+			Message: SuccessMessage,
+		},
+	}, nil
 }

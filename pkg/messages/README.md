@@ -27,11 +27,11 @@ It has following methods:
 // Notify - notifies all subscribers with msg
 func (publisher *Publisher) Notify(msg *Message) 
 
-// Subscribe - subscribes `subscriber` to `topic`
-func (publisher *Publisher) Subscribe(subscriber *Subscriber, topic Topic)
+// Subscribe - subscribes `subscriber` to `id`
+func (publisher *Publisher) Subscribe(subscriber *Subscriber, id SubscriptionID)
 
-// Unsubscribe - unsubscribes `subscriber` from `topic`
-func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, topic Topic)
+// Unsubscribe - unsubscribes `subscriber` from `id`
+func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, id SubscriptionID)
 ```
 
 ### Subscriber
@@ -39,7 +39,7 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, topic Topic)
 Subscriber is the structure which waits messages from publisher.
 
 ```go
-subscriber, err := messages.NewSubscriber()
+subscriber := messages.NewSubscriber()
 ```
 
 It has following methods:
@@ -54,17 +54,17 @@ func (s *Subscriber) Close() error
 
 ### Message
 
-Message is the data structure. It has topic field and data.
+Message is the data structure. It has subscription id field and data.
 
 ```go
-msg :=  NewMessage(Topic("my_topic"), "message")
+msg :=  NewMessage(SubscriptionID(100), "message")
 ```
 
 It has following methods:
 
 ```go
-// Topic - returns message's topic
-func (msg *Message) Topic() Topic
+// SubscriptionID - returns message's subscription identity
+func (msg *Message) SubscriptionID() SubscriptionID 
 
 // Data - returns message's data
 func (msg *Message) Data() any

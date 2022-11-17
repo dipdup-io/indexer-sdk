@@ -11,14 +11,11 @@ import (
 func main() {
 	publisher := messages.NewPublisher()
 
-	subscriber, err := messages.NewSubscriber()
-	if err != nil {
-		log.Panic(err)
-	}
+	subscriber := messages.NewSubscriber()
 
-	topic := messages.Topic("some_topic")
+	id := messages.SubscriptionID(100)
 
-	publisher.Subscribe(subscriber, topic)
+	publisher.Subscribe(subscriber, id)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -31,7 +28,7 @@ func main() {
 			case <-ctx.Done():
 				return
 			case <-tckr.C:
-				publisher.Notify(messages.NewMessage(topic, "new message"))
+				publisher.Notify(messages.NewMessage(id, "new message"))
 			}
 		}
 	}()

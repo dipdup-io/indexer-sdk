@@ -2,12 +2,11 @@ package messages
 
 import "sync"
 
-type subscribers map[uint64]*Subscriber
+type subscribers map[SubscriptionID]*Subscriber
 
 // Publisher -
 type Publisher struct {
-	subscibers subscribers
-	topics     map[Topic]subscribers
+	subscribers subscribers
 
 	mx sync.RWMutex
 }
@@ -15,8 +14,7 @@ type Publisher struct {
 // NewPublisher -
 func NewPublisher() *Publisher {
 	return &Publisher{
-		subscibers: make(subscribers),
-		topics:     make(map[Topic]subscribers),
+		subscribers: make(subscribers),
 	}
 }
 
@@ -29,15 +27,13 @@ func (publisher *Publisher) Notify(msg *Message) {
 	defer publisher.mx.RUnlock()
 	publisher.mx.RLock()
 
-	if subscribers, ok := publisher.topics[msg.topic]; ok {
-		for _, subscriber := range subscribers {
-			subscriber.notify(msg)
-		}
+	if subscriber, ok := publisher.subscribers[msg.id]; ok {
+		subscriber.notify(msg)
 	}
 }
 
-// Subscribe - subscribes `subscriber` to `topic`
-func (publisher *Publisher) Subscribe(subscriber *Subscriber, topic Topic) {
+// Subscribe - subscribes `subscriber` to `id`
+func (publisher *Publisher) Subscribe(subscriber *Subscriber, id SubscriptionID) {
 	if subscriber == nil {
 		return
 	}
@@ -45,15 +41,14 @@ func (publisher *Publisher) Subscribe(subscriber *Subscriber, topic Topic) {
 	defer publisher.mx.Unlock()
 	publisher.mx.Lock()
 
-	if _, ok := publisher.topics[topic]; !ok {
-		publisher.topics[topic] = make(subscribers)
+	if _, ok := publisher.subscribers[id]; !ok {
+		publisher.subscribers[id] = subscriber
 	}
-	subscriber.addTopic(topic)
-	publisher.topics[topic][subscriber.id] = subscriber
+	subscriber.addTopic(id)
 }
 
-// Unsubscribe - unsubscribes `subscriber` from `topic`
-func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, topic Topic) {
+// Unsubscribe - unsubscribes `subscriber` from `id`
+func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, id SubscriptionID) {
 	if subscriber == nil {
 		return
 	}
@@ -61,9 +56,6 @@ func (publisher *Publisher) Unsubscribe(subscriber *Subscriber, topic Topic) {
 	defer publisher.mx.Unlock()
 	publisher.mx.Lock()
 
-	if subscribers, ok := publisher.topics[topic]; ok {
-		delete(subscribers, subscriber.id)
-	}
-
-	subscriber.removeTopic(topic)
+	delete(publisher.subscribers, id)
+	subscriber.removeTopic(id)
 }

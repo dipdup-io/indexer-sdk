@@ -15,32 +15,33 @@ type Subscription[T any, P any] interface {
 
 // Subscriptions -
 type Subscriptions[T any, P any] struct {
-	m  map[string]Subscription[T, P]
-	mx sync.RWMutex
+	m  map[uint64]Subscription[T, P]
+	mx *sync.RWMutex
 }
 
 // NewSubscriptions -
 func NewSubscriptions[T any, P any]() *Subscriptions[T, P] {
 	return &Subscriptions[T, P]{
-		m: make(map[string]Subscription[T, P]),
+		m:  make(map[uint64]Subscription[T, P]),
+		mx: new(sync.RWMutex),
 	}
 }
 
 // NotifyAll -
-func (s *Subscriptions[T, P]) NotifyAll(typ T, msg P) {
+func (s *Subscriptions[T, P]) NotifyAll(typ T, converter func(uint64, T) P) {
 	s.mx.RLock()
 	{
-		for _, sub := range s.m {
+		for id, sub := range s.m {
 			if sub != nil && sub.Filter(typ) {
-				sub.Send(msg)
+				sub.Send(converter(id, typ))
 			}
 		}
 	}
-	s.mx.Unlock()
+	s.mx.RUnlock()
 }
 
 // Add -
-func (s *Subscriptions[T, P]) Add(id string, subscription Subscription[T, P]) {
+func (s *Subscriptions[T, P]) Add(id uint64, subscription Subscription[T, P]) {
 	s.mx.Lock()
 	{
 		s.m[id] = subscription
@@ -49,7 +50,7 @@ func (s *Subscriptions[T, P]) Add(id string, subscription Subscription[T, P]) {
 }
 
 // Remove -
-func (s *Subscriptions[T, P]) Remove(id string) error {
+func (s *Subscriptions[T, P]) Remove(id uint64) error {
 	s.mx.Lock()
 	{
 		if subs, ok := s.m[id]; ok {
@@ -64,7 +65,7 @@ func (s *Subscriptions[T, P]) Remove(id string) error {
 }
 
 // Get -
-func (s *Subscriptions[T, P]) Get(id string) (Subscription[T, P], bool) {
+func (s *Subscriptions[T, P]) Get(id uint64) (Subscription[T, P], bool) {
 	defer s.mx.Unlock()
 	s.mx.RLock()
 	subs, ok := s.m[id]

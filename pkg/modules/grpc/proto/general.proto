@@ -4,18 +4,19 @@ package proto;
 
 option go_package = "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb";
 
-service HelloService {
-    rpc Hello(HelloRequest) returns (HelloResponse);
+message DefaultRequest {}
+
+message SubscribeResponse {
+    uint64 id = 1;
 }
 
-message HelloRequest {}
-
-message HelloResponse {
-    string id = 1;
+message UnsubscribeRequest {
+    uint64 id = 1;
 }
 
-message DefaultRequest {
-    string id = 1;
+message UnsubscribeResponse {
+    uint64 id = 1;
+    Message response = 2;
 }
 
 message Message {

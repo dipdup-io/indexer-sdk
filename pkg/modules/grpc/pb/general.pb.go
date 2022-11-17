@@ -66,103 +66,16 @@ func (SortOrder) EnumDescriptor() ([]byte, []int) {
 	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{0}
 }
 
-type HelloRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *HelloRequest) Reset() {
-	*x = HelloRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *HelloRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelloRequest) ProtoMessage() {}
-
-func (x *HelloRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelloRequest.ProtoReflect.Descriptor instead.
-func (*HelloRequest) Descriptor() ([]byte, []int) {
-	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{0}
-}
-
-type HelloResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-}
-
-func (x *HelloResponse) Reset() {
-	*x = HelloResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *HelloResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*HelloResponse) ProtoMessage() {}
-
-func (x *HelloResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use HelloResponse.ProtoReflect.Descriptor instead.
-func (*HelloResponse) Descriptor() ([]byte, []int) {
-	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *HelloResponse) GetId() string {
-	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
 type DefaultRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *DefaultRequest) Reset() {
 	*x = DefaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2]
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -175,7 +88,7 @@ func (x *DefaultRequest) String() string {
 func (*DefaultRequest) ProtoMessage() {}
 
 func (x *DefaultRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2]
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -188,14 +101,156 @@ func (x *DefaultRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DefaultRequest.ProtoReflect.Descriptor instead.
 func (*DefaultRequest) Descriptor() ([]byte, []int) {
-	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{2}
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *DefaultRequest) GetId() string {
+type SubscribeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *SubscribeResponse) Reset() {
+	*x = SubscribeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubscribeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeResponse) ProtoMessage() {}
+
+func (x *SubscribeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeResponse.ProtoReflect.Descriptor instead.
+func (*SubscribeResponse) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SubscribeResponse) GetId() uint64 {
 	if x != nil {
 		return x.Id
 	}
-	return ""
+	return 0
+}
+
+type UnsubscribeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *UnsubscribeRequest) Reset() {
+	*x = UnsubscribeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnsubscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnsubscribeRequest) ProtoMessage() {}
+
+func (x *UnsubscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnsubscribeRequest.ProtoReflect.Descriptor instead.
+func (*UnsubscribeRequest) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UnsubscribeRequest) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type UnsubscribeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id       uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Response *Message `protobuf:"bytes,2,opt,name=response,proto3" json:"response,omitempty"`
+}
+
+func (x *UnsubscribeResponse) Reset() {
+	*x = UnsubscribeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnsubscribeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnsubscribeResponse) ProtoMessage() {}
+
+func (x *UnsubscribeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnsubscribeResponse.ProtoReflect.Descriptor instead.
+func (*UnsubscribeResponse) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UnsubscribeResponse) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *UnsubscribeResponse) GetResponse() *Message {
+	if x != nil {
+		return x.Response
+	}
+	return nil
 }
 
 type Message struct {
@@ -209,7 +264,7 @@ type Message struct {
 func (x *Message) Reset() {
 	*x = Message{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[3]
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -222,7 +277,7 @@ func (x *Message) String() string {
 func (*Message) ProtoMessage() {}
 
 func (x *Message) ProtoReflect() protoreflect.Message {
-	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[3]
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -235,7 +290,7 @@ func (x *Message) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Message.ProtoReflect.Descriptor instead.
 func (*Message) Descriptor() ([]byte, []int) {
-	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{3}
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Message) GetMessage() string {
@@ -258,7 +313,7 @@ type Page struct {
 func (x *Page) Reset() {
 	*x = Page{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[4]
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -271,7 +326,7 @@ func (x *Page) String() string {
 func (*Page) ProtoMessage() {}
 
 func (x *Page) ProtoReflect() protoreflect.Message {
-	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[4]
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -284,7 +339,7 @@ func (x *Page) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Page.ProtoReflect.Descriptor instead.
 func (*Page) Descriptor() ([]byte, []int) {
-	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{4}
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Page) GetLimit() uint64 {
@@ -316,30 +371,32 @@ var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_
 	0x73, 0x64, 0x6b, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73, 0x2f,
 	0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x72,
 	0x61, 0x6c, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x0e, 0x0a, 0x0c, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
-	0x1f, 0x0a, 0x0d, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64,
-	0x22, 0x20, 0x0a, 0x0e, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02,
-	0x69, 0x64, 0x22, 0x23, 0x0a, 0x07, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a,
-	0x07, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x22, 0x5c, 0x0a, 0x04, 0x50, 0x61, 0x67, 0x65, 0x12,
-	0x14, 0x0a, 0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05,
-	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x26, 0x0a,
-	0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x05,
-	0x6f, 0x72, 0x64, 0x65, 0x72, 0x2a, 0x1e, 0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64,
-	0x65, 0x72, 0x12, 0x07, 0x0a, 0x03, 0x41, 0x53, 0x43, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x44,
-	0x45, 0x53, 0x43, 0x10, 0x01, 0x32, 0x42, 0x0a, 0x0c, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x53, 0x65,
-	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x13,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x65, 0x6c, 0x6c,
-	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x6e,
-	0x65, 0x74, 0x2f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70,
-	0x6b, 0x67, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f,
-	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x10, 0x0a, 0x0e, 0x44, 0x65, 0x66, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x22, 0x23, 0x0a, 0x11, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x24, 0x0a, 0x12, 0x55, 0x6e, 0x73, 0x75, 0x62, 0x73,
+	0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x22, 0x51, 0x0a, 0x13,
+	0x55, 0x6e, 0x73, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x02, 0x69, 0x64, 0x12, 0x2a, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x08, 0x72, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x23, 0x0a, 0x07, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65,
+	0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x73,
+	0x73, 0x61, 0x67, 0x65, 0x22, 0x5c, 0x0a, 0x04, 0x50, 0x61, 0x67, 0x65, 0x12, 0x14, 0x0a, 0x05,
+	0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6c, 0x69, 0x6d,
+	0x69, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x26, 0x0a, 0x05, 0x6f, 0x72,
+	0x64, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x05, 0x6f, 0x72, 0x64,
+	0x65, 0x72, 0x2a, 0x1e, 0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12,
+	0x07, 0x0a, 0x03, 0x41, 0x53, 0x43, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x44, 0x45, 0x53, 0x43,
+	0x10, 0x01, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x6e, 0x65, 0x74, 0x2f, 0x69, 0x6e, 0x64, 0x65,
+	0x78, 0x65, 0x72, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x6d, 0x6f, 0x64, 0x75,
+	0x6c, 0x65, 0x73, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -355,24 +412,24 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 }
 
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_goTypes = []interface{}{
-	(SortOrder)(0),         // 0: proto.SortOrder
-	(*HelloRequest)(nil),   // 1: proto.HelloRequest
-	(*HelloResponse)(nil),  // 2: proto.HelloResponse
-	(*DefaultRequest)(nil), // 3: proto.DefaultRequest
-	(*Message)(nil),        // 4: proto.Message
-	(*Page)(nil),           // 5: proto.Page
+	(SortOrder)(0),              // 0: proto.SortOrder
+	(*DefaultRequest)(nil),      // 1: proto.DefaultRequest
+	(*SubscribeResponse)(nil),   // 2: proto.SubscribeResponse
+	(*UnsubscribeRequest)(nil),  // 3: proto.UnsubscribeRequest
+	(*UnsubscribeResponse)(nil), // 4: proto.UnsubscribeResponse
+	(*Message)(nil),             // 5: proto.Message
+	(*Page)(nil),                // 6: proto.Page
 }
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_depIdxs = []int32{
-	0, // 0: proto.Page.order:type_name -> proto.SortOrder
-	1, // 1: proto.HelloService.Hello:input_type -> proto.HelloRequest
-	2, // 2: proto.HelloService.Hello:output_type -> proto.HelloResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 0: proto.UnsubscribeResponse.response:type_name -> proto.Message
+	0, // 1: proto.Page.order:type_name -> proto.SortOrder
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_init() }
@@ -382,30 +439,6 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HelloRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*HelloResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DefaultRequest); i {
 			case 0:
 				return &v.state
@@ -417,8 +450,32 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 				return nil
 			}
 		}
+		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubscribeResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UnsubscribeRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Message); i {
+			switch v := v.(*UnsubscribeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -430,6 +487,18 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 			}
 		}
 		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Message); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Page); i {
 			case 0:
 				return &v.state
@@ -448,9 +517,9 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   0,
 		},
 		GoTypes:           file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_goTypes,
 		DependencyIndexes: file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_depIdxs,

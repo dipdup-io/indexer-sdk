@@ -2,21 +2,21 @@ package messages
 
 // Message -
 type Message struct {
-	topic Topic
-	data  any
+	id   SubscriptionID
+	data any
 }
 
 // NewMessage -
-func NewMessage(topic Topic, data any) *Message {
+func NewMessage(id SubscriptionID, data any) *Message {
 	return &Message{
-		topic: topic,
-		data:  data,
+		id:   id,
+		data: data,
 	}
 }
 
-// Topic - returns message's topic
-func (msg *Message) Topic() Topic {
-	return msg.topic
+// SubscriptionID - returns message's subscription identity
+func (msg *Message) SubscriptionID() SubscriptionID {
+	return msg.id
 }
 
 // Data - returns message's data

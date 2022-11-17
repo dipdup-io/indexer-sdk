@@ -1,56 +1,40 @@
 package messages
 
 import (
-	"bytes"
-	"crypto/rand"
-	"encoding/binary"
 	"sync"
-
-	"github.com/rs/zerolog/log"
 )
 
-// Topic -
-type Topic string
+// SubscriptionID -
+type SubscriptionID any
 
 // Subscriber -
 type Subscriber struct {
-	id       uint64
-	topics   map[Topic]struct{}
-	messages chan *Message
+	subscriptions map[SubscriptionID]struct{}
+	messages      chan *Message
 
 	mx sync.RWMutex
 }
 
 // NewSubscriber -
-func NewSubscriber() (*Subscriber, error) {
-	i, err := id()
-	if err != nil {
-		return nil, err
-	}
+func NewSubscriber() *Subscriber {
 	return &Subscriber{
-		id:       i,
-		topics:   make(map[Topic]struct{}),
-		messages: make(chan *Message, 1024),
-	}, nil
+		subscriptions: make(map[SubscriptionID]struct{}),
+		messages:      make(chan *Message, 1024),
+	}
 }
 
-// ID -
-func (s *Subscriber) ID() uint64 {
-	return s.id
-}
-
-func (s *Subscriber) addTopic(topic Topic) {
+func (s *Subscriber) addTopic(id SubscriptionID) {
 	defer s.mx.Unlock()
 	s.mx.Lock()
 
-	s.topics[topic] = struct{}{}
+	s.subscriptions[id] = struct{}{}
 }
 
-func (s *Subscriber) removeTopic(topic Topic) {
+func (s *Subscriber) removeTopic(id SubscriptionID) {
 	defer s.mx.Unlock()
 	s.mx.Lock()
 
-	delete(s.topics, topic)
+	delete(s.subscriptions, id)
 }
 
 // Listen - waits new message from publisher
@@ -62,7 +46,6 @@ func (s *Subscriber) notify(msg *Message) {
 	select {
 	case s.messages <- msg:
 	default:
-		log.Warn().Uint64("id", s.id).Msg("can't send message: channel is full")
 	}
 }
 
@@ -70,13 +53,4 @@ func (s *Subscriber) notify(msg *Message) {
 func (s *Subscriber) Close() error {
 	close(s.messages)
 	return nil
-}
-
-func id() (uint64, error) {
-	b := make([]byte, 8)
-	_, err := rand.Read(b)
-	if err != nil {
-		return 0, err
-	}
-	return binary.ReadUvarint(bytes.NewBuffer(b))
 }
