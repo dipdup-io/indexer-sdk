@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
@@ -40,7 +41,6 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 		wg:         new(sync.WaitGroup),
 	}
 	module.server = gogrpc.NewServer(
-		gogrpc.StreamInterceptor(subscriptionStreamServerInterceptor()),
 		gogrpc.KeepaliveParams(
 			keepalive.ServerParameters{
 				Time:    20 * time.Second,
@@ -97,25 +97,33 @@ type ServerStream[T any] interface {
 	grpc.ServerStream
 }
 
+var subscriptionsCounter = new(atomic.Uint64)
+
 // DefaultSubscribeOn - default subscribe server handler
 func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P]) error {
 	ctx := stream.Context()
 
-	subscriptionID, err := GetSubscriptionID(ctx)
-	if err != nil {
-		return err
-	}
+	subscriptionID := subscriptionsCounter.Add(1)
 	subscriptions.Add(subscriptionID, subscription)
 
-	var end bool
-	for !end {
+	if err := stream.SendMsg(&pb.SubscribeResponse{
+		Id: subscriptionID,
+	}); err != nil {
+		return err
+	}
+
+loop:
+	for {
 		select {
 		case <-ctx.Done():
-			end = true
-		case msg := <-subscription.Listen():
+			break loop
+		case msg, ok := <-subscription.Listen():
+			if !ok {
+				break loop
+			}
 			if err := stream.Send(msg); err != nil {
 				if err == io.EOF {
-					end = true
+					break loop
 				} else {
 					log.Err(err).Msg("sending message error")
 				}
@@ -127,11 +135,12 @@ func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Sub
 }
 
 // DefaultUnsubscribe - default unsubscribe server handler
-func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P]) (*pb.UnsubscribeResponse, error) {
-	subscriptionID, err := GetSubscriptionID(ctx)
-	if err != nil {
-		return nil, err
+func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P], id messages.SubscriptionID) (*pb.UnsubscribeResponse, error) {
+	subscriptionID, ok := id.(uint64)
+	if !ok {
+		return nil, errors.Errorf("invalid subscription id: %v", subscriptionID)
 	}
+
 	if err := subscriptions.Remove(subscriptionID); err != nil {
 		return nil, err
 	}

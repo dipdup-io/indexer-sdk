@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/dipdup-net/indexer-sdk/examples/grpc/pb";
+
+import "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/proto/general.proto";
+
+service TimeService {
+    rpc SubscribeOnTime(Request) returns (stream Response);
+    rpc UnsubscribeFromTime(UnsubscribeRequest) returns (UnsubscribeResponse);
+}
+
+message Request {}
+
+message Response{
+    SubscribeResponse response = 1;
+    string time = 2;
+}

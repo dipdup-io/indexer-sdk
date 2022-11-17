@@ -66,7 +66,7 @@ func (s *Subscriptions[T, P]) Remove(id uint64) error {
 
 // Get -
 func (s *Subscriptions[T, P]) Get(id uint64) (Subscription[T, P], bool) {
-	defer s.mx.Unlock()
+	defer s.mx.RUnlock()
 	s.mx.RLock()
 	subs, ok := s.m[id]
 	return subs, ok

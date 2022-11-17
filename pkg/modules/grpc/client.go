@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/messages"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -91,23 +92,26 @@ func Subscribe[T any](
 	p *messages.Publisher,
 	s *messages.Subscriber,
 	stream ClientStream[T],
-	handler func(ctx context.Context, data T, id messages.SubscriptionID) error,
+	handler SubscriptionHandler[T],
 	wg *sync.WaitGroup,
 ) (messages.SubscriptionID, error) {
-	id, err := ReceiveSubscriptionID(stream)
-	if err != nil {
+	var msg pb.SubscribeResponse
+	if err := stream.RecvMsg(&msg); err != nil {
 		return 0, err
 	}
 
-	p.Subscribe(s, id)
+	p.Subscribe(s, msg.Id)
 
 	wg.Add(1)
-	go listen(stream, id, handler, wg)
+	go listen(stream, msg.Id, handler, wg)
 
-	return id, err
+	return msg.Id, nil
 }
 
-func listen[T any](stream ClientStream[T], id messages.SubscriptionID, handler func(ctx context.Context, data T, id messages.SubscriptionID) error, wg *sync.WaitGroup) {
+// SubscriptionHandler is handled on subscription message
+type SubscriptionHandler[T any] func(ctx context.Context, data T, id messages.SubscriptionID) error
+
+func listen[T any](stream ClientStream[T], id messages.SubscriptionID, handler SubscriptionHandler[T], wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for {
