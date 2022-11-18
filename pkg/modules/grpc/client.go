@@ -50,6 +50,28 @@ func (client *Client) Connect(ctx context.Context) error {
 	return nil
 }
 
+// WaitConnect - trying to connect to server
+func (client *Client) WaitConnect(ctx context.Context) {
+	if err := client.Connect(ctx); err == nil {
+		return
+	}
+
+	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			log.Info().Str("address", client.serverAddress).Msg("trying to connect to gRPC server")
+			if err := client.Connect(ctx); err == nil {
+				return
+			}
+		}
+	}
+}
+
 // Start - starts authentication client module
 func (client *Client) Start(ctx context.Context) {}
 
