@@ -1,0 +1,6 @@
+cron:
+  jobs:
+    half_an_hour: "0 30 * * * *"
+    every_minute: "* 1 * * * *"
+    every_five_second: "@every 5s"
+    every_second: "* * * * * *"

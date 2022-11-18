@@ -1,6 +1,8 @@
 package messages
 
-import "sync"
+import (
+	"sync"
+)
 
 type subscribers map[SubscriptionID]*Subscriber
 
