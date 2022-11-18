@@ -16,3 +16,7 @@ The workflow is builded by modules.
 ### gRPC
 
 gRPC module where realized default client and server. Detailed docs can be found [here](/pkg/modules/grpc/).
+
+### Cron
+
+Cron module implements cron scheduler. Detailed docs can be found [here](/pkg/modules/cron/).
