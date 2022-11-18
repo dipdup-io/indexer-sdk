@@ -51,25 +51,22 @@ func (client *Client) Connect(ctx context.Context) error {
 }
 
 // WaitConnect - trying to connect to server
-func (client *Client) WaitConnect(ctx context.Context) {
-	if err := client.Connect(ctx); err == nil {
-		return
+func (client *Client) WaitConnect(ctx context.Context) error {
+	conn, err := gogrpc.Dial(
+		client.serverAddress,
+		gogrpc.WithBlock(),
+		gogrpc.WithTransportCredentials(insecure.NewCredentials()),
+		gogrpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    20 * time.Second,
+			Timeout: 10 * time.Second,
+		}),
+	)
+	if err != nil {
+		return errors.Wrap(err, "dial connection")
 	}
+	client.conn = conn
 
-	ticker := time.NewTicker(time.Second * 5)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			log.Info().Str("address", client.serverAddress).Msg("trying to connect to gRPC server")
-			if err := client.Connect(ctx); err == nil {
-				return
-			}
-		}
-	}
+	return nil
 }
 
 // Start - starts authentication client module
