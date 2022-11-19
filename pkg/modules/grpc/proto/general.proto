@@ -33,3 +33,19 @@ message Page {
     uint64 offset = 2;
     SortOrder order = 3;
 }
+
+enum Comparator {
+    GT = 0;
+    GTE = 1;
+    LTE = 2;
+    LT = 3;
+    EQ = 4;
+    NEQ = 5;
+}
+
+message Cursor {
+    uint64 id = 1;
+    uint64 limit = 2;
+    SortOrder order = 3;
+    Comparator comparator = 4;
+}

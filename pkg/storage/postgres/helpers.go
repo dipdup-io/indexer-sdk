@@ -27,6 +27,31 @@ func Pagination(query *orm.Query, limit, offset uint64, order storage.SortOrder)
 	return query
 }
 
+// CursorPagination - adds limit, id where clause and sort to query. Query being like this:
+//
+//	query.Where("id > ?", id).Limit(limit).Order("id ?", order)
+func CursorPagination(query *orm.Query, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) *orm.Query {
+	if id > 0 {
+		query.Where("id ? ?", pg.Safe(cmp.String()), id)
+	}
+
+	if limit == 0 {
+		limit = 10
+	}
+
+	query.Limit(int(limit))
+
+	switch order {
+	case storage.SortOrderAsc:
+		query.Order("id asc")
+	case storage.SortOrderDesc:
+		query.Order("id desc")
+	default:
+		query.Order("id asc")
+	}
+	return query
+}
+
 // In - adds IN clause to query:
 //
 //	WHERE field IN (1,2,3)

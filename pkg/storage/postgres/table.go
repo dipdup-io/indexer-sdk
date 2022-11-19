@@ -56,3 +56,13 @@ func (s *Table[M]) IsNoRows(err error) bool {
 func (s *Table[M]) DB() *pg.DB {
 	return s.db.DB()
 }
+
+// CursorList - returns array of rows by cursor pagination
+func (s *Table[M]) CursorList(ctx context.Context, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) ([]M, error) {
+	var models []M
+	query := s.db.DB().ModelContext(ctx, &models)
+	query = CursorPagination(query, id, limit, order, cmp)
+
+	err := query.Select(&models)
+	return models, err
+}

@@ -66,6 +66,64 @@ func (SortOrder) EnumDescriptor() ([]byte, []int) {
 	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{0}
 }
 
+type Comparator int32
+
+const (
+	Comparator_GT  Comparator = 0
+	Comparator_GTE Comparator = 1
+	Comparator_LTE Comparator = 2
+	Comparator_LT  Comparator = 3
+	Comparator_EQ  Comparator = 4
+	Comparator_NEQ Comparator = 5
+)
+
+// Enum value maps for Comparator.
+var (
+	Comparator_name = map[int32]string{
+		0: "GT",
+		1: "GTE",
+		2: "LTE",
+		3: "LT",
+		4: "EQ",
+		5: "NEQ",
+	}
+	Comparator_value = map[string]int32{
+		"GT":  0,
+		"GTE": 1,
+		"LTE": 2,
+		"LT":  3,
+		"EQ":  4,
+		"NEQ": 5,
+	}
+)
+
+func (x Comparator) Enum() *Comparator {
+	p := new(Comparator)
+	*p = x
+	return p
+}
+
+func (x Comparator) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Comparator) Descriptor() protoreflect.EnumDescriptor {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_enumTypes[1].Descriptor()
+}
+
+func (Comparator) Type() protoreflect.EnumType {
+	return &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_enumTypes[1]
+}
+
+func (x Comparator) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Comparator.Descriptor instead.
+func (Comparator) EnumDescriptor() ([]byte, []int) {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{1}
+}
+
 type DefaultRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -363,6 +421,77 @@ func (x *Page) GetOrder() SortOrder {
 	return SortOrder_ASC
 }
 
+type Cursor struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id         uint64     `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Limit      uint64     `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Order      SortOrder  `protobuf:"varint,3,opt,name=order,proto3,enum=proto.SortOrder" json:"order,omitempty"`
+	Comparator Comparator `protobuf:"varint,4,opt,name=comparator,proto3,enum=proto.Comparator" json:"comparator,omitempty"`
+}
+
+func (x *Cursor) Reset() {
+	*x = Cursor{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Cursor) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Cursor) ProtoMessage() {}
+
+func (x *Cursor) ProtoReflect() protoreflect.Message {
+	mi := &file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Cursor.ProtoReflect.Descriptor instead.
+func (*Cursor) Descriptor() ([]byte, []int) {
+	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Cursor) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Cursor) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *Cursor) GetOrder() SortOrder {
+	if x != nil {
+		return x.Order
+	}
+	return SortOrder_ASC
+}
+
+func (x *Cursor) GetComparator() Comparator {
+	if x != nil {
+		return x.Comparator
+	}
+	return Comparator_GT
+}
+
 var File_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto protoreflect.FileDescriptor
 
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDesc = []byte{
@@ -390,13 +519,25 @@ var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_
 	0x28, 0x04, 0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x26, 0x0a, 0x05, 0x6f, 0x72,
 	0x64, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x2e, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x05, 0x6f, 0x72, 0x64,
-	0x65, 0x72, 0x2a, 0x1e, 0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12,
-	0x07, 0x0a, 0x03, 0x41, 0x53, 0x43, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x44, 0x45, 0x53, 0x43,
-	0x10, 0x01, 0x42, 0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x64, 0x69, 0x70, 0x64, 0x75, 0x70, 0x2d, 0x6e, 0x65, 0x74, 0x2f, 0x69, 0x6e, 0x64, 0x65,
-	0x78, 0x65, 0x72, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x6d, 0x6f, 0x64, 0x75,
-	0x6c, 0x65, 0x73, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x65, 0x72, 0x22, 0x89, 0x01, 0x0a, 0x06, 0x43, 0x75, 0x72, 0x73, 0x6f, 0x72, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x12, 0x26, 0x0a, 0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x6f, 0x72, 0x74, 0x4f,
+	0x72, 0x64, 0x65, 0x72, 0x52, 0x05, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x31, 0x0a, 0x0a, 0x63,
+	0x6f, 0x6d, 0x70, 0x61, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32,
+	0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x61, 0x74,
+	0x6f, 0x72, 0x52, 0x0a, 0x63, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x2a, 0x1e,
+	0x0a, 0x09, 0x53, 0x6f, 0x72, 0x74, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x07, 0x0a, 0x03, 0x41,
+	0x53, 0x43, 0x10, 0x00, 0x12, 0x08, 0x0a, 0x04, 0x44, 0x45, 0x53, 0x43, 0x10, 0x01, 0x2a, 0x3f,
+	0x0a, 0x0a, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x06, 0x0a, 0x02,
+	0x47, 0x54, 0x10, 0x00, 0x12, 0x07, 0x0a, 0x03, 0x47, 0x54, 0x45, 0x10, 0x01, 0x12, 0x07, 0x0a,
+	0x03, 0x4c, 0x54, 0x45, 0x10, 0x02, 0x12, 0x06, 0x0a, 0x02, 0x4c, 0x54, 0x10, 0x03, 0x12, 0x06,
+	0x0a, 0x02, 0x45, 0x51, 0x10, 0x04, 0x12, 0x07, 0x0a, 0x03, 0x4e, 0x45, 0x51, 0x10, 0x05, 0x42,
+	0x37, 0x5a, 0x35, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x64, 0x69,
+	0x70, 0x64, 0x75, 0x70, 0x2d, 0x6e, 0x65, 0x74, 0x2f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x65, 0x72,
+	0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x70, 0x6b, 0x67, 0x2f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x73,
+	0x2f, 0x67, 0x72, 0x70, 0x63, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -411,25 +552,29 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 	return file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDescData
 }
 
-var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_goTypes = []interface{}{
 	(SortOrder)(0),              // 0: proto.SortOrder
-	(*DefaultRequest)(nil),      // 1: proto.DefaultRequest
-	(*SubscribeResponse)(nil),   // 2: proto.SubscribeResponse
-	(*UnsubscribeRequest)(nil),  // 3: proto.UnsubscribeRequest
-	(*UnsubscribeResponse)(nil), // 4: proto.UnsubscribeResponse
-	(*Message)(nil),             // 5: proto.Message
-	(*Page)(nil),                // 6: proto.Page
+	(Comparator)(0),             // 1: proto.Comparator
+	(*DefaultRequest)(nil),      // 2: proto.DefaultRequest
+	(*SubscribeResponse)(nil),   // 3: proto.SubscribeResponse
+	(*UnsubscribeRequest)(nil),  // 4: proto.UnsubscribeRequest
+	(*UnsubscribeResponse)(nil), // 5: proto.UnsubscribeResponse
+	(*Message)(nil),             // 6: proto.Message
+	(*Page)(nil),                // 7: proto.Page
+	(*Cursor)(nil),              // 8: proto.Cursor
 }
 var file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_depIdxs = []int32{
-	5, // 0: proto.UnsubscribeResponse.response:type_name -> proto.Message
+	6, // 0: proto.UnsubscribeResponse.response:type_name -> proto.Message
 	0, // 1: proto.Page.order:type_name -> proto.SortOrder
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // 2: proto.Cursor.order:type_name -> proto.SortOrder
+	1, // 3: proto.Cursor.comparator:type_name -> proto.Comparator
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_init() }
@@ -510,14 +655,26 @@ func file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto
 				return nil
 			}
 		}
+		file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Cursor); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_github_com_dipdup_net_indexer_sdk_pkg_modules_grpc_proto_general_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   6,
+			NumEnums:      2,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

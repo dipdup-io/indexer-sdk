@@ -13,12 +13,45 @@ const (
 	SortOrderDesc SortOrder = "desc"
 )
 
+// Comparator - enum for cursor pagination
+type Comparator uint64
+
+const (
+	ComparatorEq Comparator = iota
+	ComparatorNeq
+	ComparatorLt
+	ComparatorLte
+	ComparatorGt
+	ComparatorGte
+)
+
+// String -
+func (c Comparator) String() string {
+	switch c {
+	case ComparatorEq:
+		return "="
+	case ComparatorGt:
+		return ">"
+	case ComparatorGte:
+		return ">="
+	case ComparatorLt:
+		return "<"
+	case ComparatorLte:
+		return "<="
+	case ComparatorNeq:
+		return "!="
+	default:
+		return ""
+	}
+}
+
 // Table - interface to communication with one data type (like table, collection, etc)
 type Table[M Model] interface {
 	GetByID(ctx context.Context, id uint64) (M, error)
 	Save(ctx context.Context, m M) error
 	Update(ctx context.Context, m M) error
 	List(ctx context.Context, limit, offset uint64, order SortOrder) ([]M, error)
+	CursorList(ctx context.Context, id, limit uint64, order SortOrder, cmp Comparator) ([]M, error)
 
 	IsNoRows(err error) bool
 }
