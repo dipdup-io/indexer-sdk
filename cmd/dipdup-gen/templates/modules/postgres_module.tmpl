@@ -1,0 +1,96 @@
+package main
+
+import (
+	"context"
+	"sync"
+
+	"github.com/dipdup-net/go-lib/config"
+	"{{ .PackageName }}/internal/storage/postgres"
+	"{{ .PackageName }}/internal/storage"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	{{ range $model, $value := .Models -}}
+	InputPostgres{{ $model }} = "{{ $model }}"
+	{{ end -}}
+)
+
+// Postgres -
+type Postgres struct {
+	*postgres.Storage
+
+	inputs map[string]*modules.Input
+
+	wg *sync.WaitGroup
+}
+
+// NewPostgres -
+func NewPostgres() *Postgres {
+	return &Postgres{
+		inputs: map[string]*modules.Input{
+			{{ range $model, $value := .Models -}}
+			InputPostgres{{ $model }}: modules.NewInput(InputPostgres{{ $model }}),
+			{{ end -}}
+		},
+		wg:         new(sync.WaitGroup),
+	}
+}
+
+// Name -
+func (*Postgres) Name() string {
+	return "postgres"
+}
+
+// Connect -
+func (pg *Postgres) Connect(ctx context.Context, cfg config.Database) error {
+	strg, err := postgres.Create(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	pg.Storage = &strg
+	return nil
+}
+
+// Start -
+func (pg *Postgres) Start(ctx context.Context) {
+	pg.wg.Add(1)
+	go pg.listen(ctx)
+}
+
+func (pg *Postgres) listen(ctx context.Context) {
+	defer pg.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		{{ range $model, $value := .Models -}}
+		case msg, ok := <-pg.inputs[InputPostgres{{ $model }}].Listen():
+			if !ok {
+				return
+			}
+
+			if err := pg.{{ $model }}.Save(ctx, msg.(*storage.{{ $model }})); err != nil {
+				log.Err(err).Msg("saving model {{ $model }} error")
+			}
+		{{ end -}}
+		}
+	}
+}
+
+// Close -
+func (pg *Postgres) Close() error {
+	pg.wg.Wait()
+	if err := pg.Storage.Close(); err != nil {
+		return err
+	}
+
+	for _, input := range pg.inputs {
+		if err := input.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
+}

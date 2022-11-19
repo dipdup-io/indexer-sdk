@@ -1,0 +1,43 @@
+package storage
+
+import (
+	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	{{ if .GoType.HasDecimal -}}
+	"github.com/shopspring/decimal"
+	{{ end -}}
+	{{ if .GoType.HasBigInt -}}
+	"math/big"
+	{{ end -}}
+)
+
+// I{{.GoType.Name}} -
+type I{{.GoType.Name}} interface {
+	storage.Table[*{{.GoType.Name}}]
+}
+
+// {{.GoType.Name}} -
+type {{.GoType.Name}} struct {
+	// nolint
+	tableName struct{} `pg:"{{.GoType.Name}}"`
+
+	ID        uint64 `json:"-"`
+	Height    uint64 `json:"-"`
+	Timestamp uint64 `json:"-"`
+	{{ range $field := .GoType.Fields -}}
+	{{$field.Name}} {{$field.Type}} `{{$field.Tags}}`
+	{{ end }}
+}
+
+// TableName -
+func ({{.GoType.Name}}) TableName() string {
+	return "{{.GoType.Name}}"
+}
+
+{{ range $name, $typ := .Nested }}
+// {{ $name }} -
+type {{ $name }} struct {
+	{{ range $field := $typ.Fields -}}
+	{{$field.Name}} {{$field.Type}}
+	{{ end -}}
+}
+{{ end }}

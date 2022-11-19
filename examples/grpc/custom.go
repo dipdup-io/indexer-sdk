@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/dipdup-net/indexer-sdk/pkg/messages"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
 // CustomModule -
 type CustomModule struct {
-	*messages.Subscriber
+	input *modules.Input
 
 	wg *sync.WaitGroup
 }
@@ -19,8 +20,8 @@ type CustomModule struct {
 // NewCustomModule -
 func NewCustomModule() *CustomModule {
 	return &CustomModule{
-		Subscriber: messages.NewSubscriber(),
-		wg:         new(sync.WaitGroup),
+		input: modules.NewInput("input"),
+		wg:    new(sync.WaitGroup),
 	}
 }
 
@@ -30,6 +31,24 @@ func (m *CustomModule) Start(ctx context.Context) {
 	go m.listen(ctx)
 }
 
+// Input -
+func (m *CustomModule) Input(name string) (*modules.Input, error) {
+	if name != "input" {
+		return nil, errors.Wrap(modules.ErrUnknownInput, name)
+	}
+	return m.input, nil
+}
+
+// Output -
+func (m *CustomModule) Output(name string) (*modules.Output, error) {
+	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
+}
+
+// AttachTo -
+func (m *CustomModule) AttachTo(name string, input *modules.Input) error {
+	return errors.Wrap(modules.ErrUnknownOutput, name)
+}
+
 func (m *CustomModule) listen(ctx context.Context) {
 	defer m.wg.Done()
 
@@ -37,8 +56,8 @@ func (m *CustomModule) listen(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case msg := <-m.Listen():
-			b, _ := json.Marshal(msg.Data())
+		case msg := <-m.input.Listen():
+			b, _ := json.Marshal(msg)
 			log.Info().Str("msg", string(b)).Msg("arrived from grpc module")
 		}
 	}
@@ -47,5 +66,10 @@ func (m *CustomModule) listen(ctx context.Context) {
 // Close -
 func (m *CustomModule) Close() error {
 	m.wg.Wait()
-	return nil
+	return m.input.Close()
+}
+
+// Name -
+func (*CustomModule) Name() string {
+	return "custom"
 }

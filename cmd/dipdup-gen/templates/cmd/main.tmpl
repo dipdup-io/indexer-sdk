@@ -1,0 +1,157 @@
+package main
+
+import (
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
+	"encoding/json"
+
+	abiRPC "github.com/dipdup-net/abi-indexer/pkg/modules/grpc"
+	"github.com/dipdup-net/evm-indexer/pkg/modules/grpc"
+	"github.com/dipdup-net/evm-indexer/pkg/modules/layer2"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/dipdup-net/go-lib/config"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/spf13/cobra"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+)
+
+// Config -
+type Config struct {
+	*config.Config `yaml:",inline"`
+	LogLevel       string               `yaml:"log_level" validate:"omitempty,oneof=debug trace info warn error fatal panic"`
+	Indexer        *layer2.Config       `yaml:"indexer"`
+	Metadata       *abiRPC.ClientConfig `yaml:"metadata"`
+}
+
+var (
+	rootCmd = &cobra.Command{
+		Use:   "{{ .App }}",
+		Short: "DipDup indexer",
+	}
+)
+
+func main() {
+	configPath := rootCmd.PersistentFlags().String("config", "dipdup.yml", "path to YAML config file")
+
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: "2006-01-02 15:04:05",
+	})
+
+	var cfg Config
+	if err := config.Parse(*configPath, &cfg); err != nil {
+		log.Panic().Err(err).Msg("config parsing error")
+		return
+	}
+
+	if cfg.LogLevel == "" {
+		cfg.LogLevel = zerolog.LevelInfoValue
+	}
+
+	logLevel, err := zerolog.ParseLevel(cfg.LogLevel)
+	if err != nil {
+		log.Panic().Err(err).Msg("parsing log level")
+		return
+	}
+	zerolog.SetGlobalLevel(logLevel)
+
+	if address, ok := cfg.DataSources[cfg.Indexer.ClientConfig.ServerAddress]; ok {
+		cfg.Indexer.ClientConfig.ServerAddress = address.URL
+	}
+	if address, ok := cfg.DataSources[cfg.Metadata.ServerAddress]; ok {
+		cfg.Metadata.ServerAddress = address.URL
+	}
+
+	client := grpc.NewClient(*cfg.Indexer.ClientConfig)
+	abiClient := abiRPC.NewClient(cfg.Metadata)
+
+	indexer := layer2.NewIndexer(client, "{{ .Address }}", grpc.Subscriptions{
+		Head: true,
+		Logs: &grpc.LogsConfig{
+			Contracts: []string{"{{ .Address }}"},
+		},
+		Txs: &grpc.TxsConfig{
+			From: []string{"{{ .Address }}"},
+			To:   []string{"{{ .Address }}"},
+		},
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	if err := client.Connect(ctx); err != nil {
+		log.Panic().Err(err).Msg("error during connect to layer 1 indexer gRPC")
+		cancel()
+		return
+	}
+	if err := abiClient.Connect(ctx); err != nil {
+		log.Panic().Err(err).Msg("error during connect to abi indexer gRPC")
+		cancel()
+		return
+	}
+
+	metadata, err := abiClient.GetMetadata(ctx, "{{.Address}}")
+	if err != nil {
+		log.Panic().Err(err).Msg("receiving abi error")
+		return
+	}
+	
+	var contractABI abi.ABI
+	if err := json.Unmarshal(metadata.Metadata, &contractABI); err != nil {
+		log.Panic().Err(err).Msg("abi decoding error")
+		return
+	}
+
+	dcdr := NewEVMDecoder(map[string]*abi.ABI{
+		"0x002b1ee9B1CF77233F9f96Fc9ee6191D2b857Be2": &contractABI,
+	})
+
+	if err := modules.Connect(client, dcdr, layer2.OutputTransactions, InputTransactions); err != nil {
+		log.Panic().Err(err).Msg("creating module connection")
+		return
+	}
+
+	pg := NewPostgres()
+	if err := pg.Connect(ctx, cfg.Database); err != nil {
+		log.Panic().Err(err).Msg("connection to database error")
+		return
+	}
+
+	{{ range $model, $value := .Models -}}
+	if err := modules.Connect(client, dcdr, Output{{ $model }}, InputPostgres{{ $model }}); err != nil {
+		log.Panic().Err(err).Msg("creating module connection")
+		return
+	}
+	{{ end -}}
+
+	pg.Start(ctx)
+	client.Start(ctx)
+	abiClient.Start(ctx)
+	dcdr.Start(ctx)
+	indexer.Start(ctx)
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	<-signals
+	cancel()
+
+	if err := indexer.Close(ctx); err != nil {
+		log.Err(err).Msg("closing layer 1 indexer module error")
+	}
+	if err := dcdr.Close(); err != nil {
+		log.Err(err).Msg("closing decoder module error")
+	}
+	if err := abiClient.Close(); err != nil {
+		log.Err(err).Msg("closing ABI gRPC module error")
+	}
+	if err := client.Close(); err != nil {
+		log.Err(err).Msg("closing layer 1 indexer gRPC module error")
+	}
+	if err := pg.Close(); err != nil {
+		log.Err(err).Msg("closing postgres module error")
+	}
+}

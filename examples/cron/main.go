@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/cron"
 )
 
@@ -22,17 +23,16 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Print("cron module was created")
-
 	customModule := NewCustomModule()
-	log.Print("custom module was created")
+
+	if err := modules.Connect(cronModule, customModule, "every_second", "every_second"); err != nil {
+		log.Panic(err)
+	}
+	if err := modules.Connect(cronModule, customModule, "every_five_second", "every_five_second"); err != nil {
+		log.Panic(err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	cronModule.Subscribe(customModule.Subscriber, "every_second")      // set job name as subscription id
-	cronModule.Subscribe(customModule.Subscriber, "every_five_second") // set job name as subscription id
-	log.Print("custom module was subscribed on cron module")
-
 	customModule.Start(ctx)
 	cronModule.Start(ctx)
 	log.Print("modules started")

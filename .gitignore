@@ -15,3 +15,6 @@
 # vendor/
 
 *.env
+
+cmd/example
+cmd/dipdup-gen/*.json

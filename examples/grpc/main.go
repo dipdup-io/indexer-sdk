@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 )
 
@@ -29,16 +30,12 @@ func main() {
 		return
 	}
 
-	// creating custom module which receives notification from client and log it to console.
-	module := NewCustomModule()
-
 	// creating client module
 	client := NewClient(bind)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// starting all modules
-	module.Start(ctx)
 	server.Start(ctx)
 
 	if err := client.Connect(ctx); err != nil {
@@ -48,16 +45,26 @@ func main() {
 	client.Start(ctx)
 
 	// subscribing to time
-	subscriptionID, err := client.SubscribeOnTime(ctx, module.Subscriber)
+	subscriptionID, err := client.SubscribeOnTime(ctx)
 	if err != nil {
 		log.Panic().Err(err).Msg("subscribing error")
 		return
 	}
-	log.Info().Uint64("subscription_id", subscriptionID.(uint64)).Msg("subscribed")
+	log.Info().Uint64("subscription_id", subscriptionID).Msg("subscribed")
+
+	// creating custom module which receives notification from client and log it to console.
+	module := NewCustomModule()
+
+	if err := modules.Connect(client, module, "time", "input"); err != nil {
+		log.Panic().Err(err).Msg("module connection error")
+		return
+	}
+
+	module.Start(ctx)
 
 	time.Sleep(time.Minute)
 
-	if err := client.UnsubscribeFromTime(ctx, module.Subscriber, subscriptionID); err != nil {
+	if err := client.UnsubscribeFromTime(ctx, subscriptionID); err != nil {
 		log.Panic().Err(err).Msg("unsubscribing error")
 		return
 	}

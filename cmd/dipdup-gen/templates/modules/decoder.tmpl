@@ -1,0 +1,207 @@
+package main
+
+import (
+	"context"
+	"sync"
+
+	"github.com/dipdup-net/evm-indexer/pkg/modules/grpc/pb"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+	"{{ .PackageName }}/internal/storage"
+)
+
+// decoder input and output names
+const (
+	InputTransactions = "transactions"
+	InputLogs = "logs"
+
+	{{ range $typ, $value := .Models -}}
+	Output{{ $typ }} = "{{ $typ }}"
+	{{ end -}}
+)
+
+// EVMDecoder -
+type EVMDecoder struct {
+	inputs map[string]*modules.Input
+	outputs map[string]*modules.Output
+
+	abis      map[string]*abi.ABI
+
+	wg *sync.WaitGroup
+}
+
+// NewEVMDecoder -
+func NewEVMDecoder(abis map[string]*abi.ABI) *EVMDecoder {
+	return &EVMDecoder{
+		inputs: map[string]*modules.Input{
+			InputTransactions: modules.NewInput(InputTransactions),
+			InputLogs: modules.NewInput(InputLogs),
+		},
+		outputs: map[string]*modules.Output{
+			{{ range $typ, $value := .Models -}}
+			Output{{ $typ }}:  modules.NewOutput(Output{{ $typ }}),
+			{{ end -}}	
+		},
+		abis:       abis,
+		wg:         new(sync.WaitGroup),
+	}
+}
+
+// Name -
+func (d *EVMDecoder) Name() string {
+	return "decoder"
+}
+
+// Input -
+func (d *EVMDecoder) Input(name string) (*modules.Input, error) {
+	input, ok := d.inputs[name]
+	if !ok {
+		return nil, errors.Wrap(modules.ErrUnknownInput, name)
+	}
+	return input, nil
+}
+
+// Output -
+func (d *EVMDecoder) Output(name string) (*modules.Output, error) {
+	output, ok := d.outputs[name]
+	if !ok {
+		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
+	}
+	return output, nil
+}
+
+// AttachTo -
+func (d *EVMDecoder) AttachTo(name string, input *modules.Input) error {
+	output, err := d.Output(name)
+	if err != nil {
+		return err
+	}
+	output.Attach(input)
+	return nil
+}
+
+
+// Start -
+func (d *EVMDecoder) Start(ctx context.Context) {
+	d.wg.Add(1)
+	go d.listen(ctx)
+}
+
+func (d *EVMDecoder) listen(ctx context.Context) {
+	defer d.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-d.inputs[InputTransactions].Listen():
+			if !ok {
+				return
+			}
+			tx, ok := msg.(*pb.Tx)
+			if !ok {
+				continue
+			}
+			if err := d.handleTransaction(tx); err != nil {
+				log.Err(err).Msg("decoding transaction error")
+				continue
+			}
+		case msg, ok := <-d.inputs[InputLogs].Listen():
+			if !ok {
+				return
+			}
+			l, ok := msg.(*pb.Log)
+			if !ok {
+				continue
+			}
+
+			if err := d.handleLog(l); err != nil {
+				log.Err(err).Msg("decoding log error")
+				continue
+			}
+		}
+	}
+}
+
+// Close -
+func (d *EVMDecoder) Close() error {
+	d.wg.Wait()
+
+	for _, input := range d.inputs {
+		if err := input.Close(); err != nil {
+			return err
+		} 
+	}
+
+	return nil
+}
+
+func (d *EVMDecoder) handleTransaction(tx *pb.Tx) error {
+	{{ if not .Methods -}}
+	return nil
+	{{ else -}}
+	abi, ok := d.abis[tx.To]
+	if !ok {
+		return errors.Errorf("unknown contract abi for decoding: %s", tx.From)
+	}
+
+	signature := common.FromHex(tx.To)
+	method, err := abi.MethodById(signature)
+	if err != nil {
+		return err
+	}
+
+	switch tx.Method {
+	{{ range $typ, $signature := .Methods -}}
+	case "{{ $signature }}":
+		var obj storage.{{ $typ }}
+		if err := abi.UnpackIntoInterface(&obj, method.Name, tx.Data); err != nil {
+			return err
+		}
+		obj.ID = tx.Id
+		obj.Height = tx.Height
+		obj.Timestamp = tx.Time
+		d.outputs[Output{{ $typ }}].Push(&obj)
+	{{ end -}}
+	default:
+	}
+
+	return nil
+	{{ end -}}
+}
+func (d *EVMDecoder) handleLog(l *pb.Log) error {
+	{{ if not .Events -}}
+	return nil
+	{{ else -}}
+	abi, ok := d.abis[l.Contract]
+	if !ok {
+		return errors.Errorf("unknown contract abi for decoding: %s", l.Contract)
+	}
+
+	topic := common.BytesToHash(common.FromHex(l.Topic))
+	event, err := abi.EventByID(topic)
+	if err != nil {
+		return err
+	}
+
+	switch l.Topic {
+	{{ range $typ, $signature := .Events -}}
+	case "{{ $signature }}":
+		var obj storage.{{ $typ }}
+		if err := abi.UnpackIntoInterface(&obj, event.Name, l.Data); err != nil {
+			return err
+		}
+		obj.ID = l.Id
+		obj.Height = l.Height
+		obj.Timestamp = l.Time
+		d.outputs[Output{{ $typ }}].Push(&obj)
+	{{ end -}}
+	default:
+	}
+
+	return nil
+	{{ end -}}
+}
