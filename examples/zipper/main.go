@@ -35,7 +35,6 @@ func main() {
 	first.Start(ctx)
 
 	go func() {
-
 		for {
 			select {
 			case <-ctx.Done():
@@ -58,6 +57,9 @@ func main() {
 		log.Panic(err)
 	}
 	if err := zip.Close(); err != nil {
+		log.Panic(err)
+	}
+	if err := fakeInput.Close(); err != nil {
 		log.Panic(err)
 	}
 }
