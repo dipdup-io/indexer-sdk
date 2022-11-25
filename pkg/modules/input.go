@@ -76,7 +76,7 @@ func (output *Output) Push(msg any) {
 			output.connectedInputs[i].Push(msg)
 		}
 	}
-	output.mx.Unlock()
+	output.mx.RUnlock()
 }
 
 // Attach -
