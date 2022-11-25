@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 
-	"github.com/dipdup-net/indexer-sdk/pkg/messages"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"google.golang.org/grpc"
 	gogrpc "google.golang.org/grpc"
@@ -20,8 +19,6 @@ import (
 
 // Server - basic server structure which implemented module interface and handle stats endpoints.
 type Server struct {
-	*messages.Subscriber
-
 	bind string
 
 	server *gogrpc.Server
@@ -34,11 +31,9 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 	if cfg == nil {
 		return nil, errors.New("configuration structure of gRPC server is nil")
 	}
-	subscriber := messages.NewSubscriber()
 	module := &Server{
-		bind:       cfg.Bind,
-		Subscriber: subscriber,
-		wg:         new(sync.WaitGroup),
+		bind: cfg.Bind,
+		wg:   new(sync.WaitGroup),
 	}
 	module.server = gogrpc.NewServer(
 		gogrpc.KeepaliveParams(
@@ -54,6 +49,11 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 			},
 		))
 	return module, nil
+}
+
+// Name -
+func (*Server) Name() string {
+	return "grpc_server"
 }
 
 // Start - starts server module
@@ -79,9 +79,6 @@ func (module *Server) grpc(ctx context.Context) {
 
 // Close - closes server module
 func (module *Server) Close() error {
-	if err := module.Subscriber.Close(); err != nil {
-		return err
-	}
 	module.server.Stop()
 	return nil
 }
@@ -135,12 +132,7 @@ loop:
 }
 
 // DefaultUnsubscribe - default unsubscribe server handler
-func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P], id messages.SubscriptionID) (*pb.UnsubscribeResponse, error) {
-	subscriptionID, ok := id.(uint64)
-	if !ok {
-		return nil, errors.Errorf("invalid subscription id: %v", subscriptionID)
-	}
-
+func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P], subscriptionID uint64) (*pb.UnsubscribeResponse, error) {
 	if err := subscriptions.Remove(subscriptionID); err != nil {
 		return nil, err
 	}

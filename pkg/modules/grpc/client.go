@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dipdup-net/indexer-sdk/pkg/messages"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -18,8 +17,7 @@ import (
 
 // Client - the structure which is responsible for connection to server
 type Client struct {
-	publisher *messages.Publisher
-	conn      *gogrpc.ClientConn
+	conn *gogrpc.ClientConn
 
 	serverAddress string
 }
@@ -27,9 +25,13 @@ type Client struct {
 // NewClient - constructor of client structure
 func NewClient(server string) *Client {
 	return &Client{
-		publisher:     messages.NewPublisher(),
 		serverAddress: server,
 	}
+}
+
+// Name -
+func (client *Client) Name() string {
+	return "grpc_client"
 }
 
 // Connect - connects to server
@@ -80,24 +82,9 @@ func (client *Client) Close() error {
 	return nil
 }
 
-// Subscribe - subscribes on events of client module
-func (client *Client) Subscribe(s *messages.Subscriber, id messages.SubscriptionID) {
-	client.publisher.Subscribe(s, id)
-}
-
-// Unsubscribe - unsubscribes from events of client module
-func (client *Client) Unsubscribe(s *messages.Subscriber, id messages.SubscriptionID) {
-	client.publisher.Unsubscribe(s, id)
-}
-
 // Connection - receives connection entity
 func (client *Client) Connection() *grpc.ClientConn {
 	return client.conn
-}
-
-// Publisher - receives publisher entity
-func (client *Client) Publisher() *messages.Publisher {
-	return client.publisher
 }
 
 // ClientStream -
@@ -108,18 +95,14 @@ type ClientStream[T any] interface {
 
 // Subscribe - generic function to subscribe on events from server
 func Subscribe[T any](
-	p *messages.Publisher,
-	s *messages.Subscriber,
 	stream ClientStream[T],
 	handler SubscriptionHandler[T],
 	wg *sync.WaitGroup,
-) (messages.SubscriptionID, error) {
+) (uint64, error) {
 	var msg pb.SubscribeResponse
 	if err := stream.RecvMsg(&msg); err != nil {
 		return 0, err
 	}
-
-	p.Subscribe(s, msg.Id)
 
 	wg.Add(1)
 	go listen(stream, msg.Id, handler, wg)
@@ -128,9 +111,9 @@ func Subscribe[T any](
 }
 
 // SubscriptionHandler is handled on subscription message
-type SubscriptionHandler[T any] func(ctx context.Context, data T, id messages.SubscriptionID) error
+type SubscriptionHandler[T any] func(ctx context.Context, data T, subscriptionID uint64) error
 
-func listen[T any](stream ClientStream[T], id messages.SubscriptionID, handler SubscriptionHandler[T], wg *sync.WaitGroup) {
+func listen[T any](stream ClientStream[T], subscriptionID uint64, handler SubscriptionHandler[T], wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	for {
@@ -148,7 +131,7 @@ func listen[T any](stream ClientStream[T], id messages.SubscriptionID, handler S
 			}
 
 			if handler != nil {
-				if err := handler(stream.Context(), data, id); err != nil {
+				if err := handler(stream.Context(), data, subscriptionID); err != nil {
 					log.Err(err).Msg("subscription handler error")
 				}
 			}

@@ -1,0 +1,19 @@
+package postgres
+
+import (
+	"{{ .PackageName }}/internal/storage"
+	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+)
+
+// {{.GoType.Name}} -
+type {{.GoType.Name}} struct {
+	*postgres.Table[*storage.{{.GoType.Name}}]
+}
+
+// New{{.GoType.Name}} -
+func New{{.GoType.Name}}(db *database.PgGo) *{{.GoType.Name}} {
+	return &{{.GoType.Name}}{
+		Table: postgres.NewTable[*storage.{{.GoType.Name}}](db),
+	}
+}

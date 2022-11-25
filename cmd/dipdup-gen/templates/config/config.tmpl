@@ -1,0 +1,34 @@
+version: 0.0.1
+database:
+  kind: postgres
+  host: ${POSTGRES_HOST:-127.0.0.1}
+  port: 5432
+  user: ${POSTGRES_USER:-dipdup}
+  password: ${POSTGRES_PASSWORD:-changeme}
+  database: ${POSTGRES_DB_NAME:-dipdup}
+  schema_name: ${POSTGRES_SCHEMA:-public}
+datasources:
+  abiRPC:
+    kind: grpc
+    url: ${METADATA_GRPC:-127.0.0.1:7778}
+  layer1RPC:
+    kind: grpc
+    url: ${INDEXER_GRPC:-127.0.0.1:7777}
+log_level: info
+indexer:
+  server_address: layer1RPC
+  subscriptions:
+    {{ .Address }}:
+      head: true
+      logs:
+        contracts:
+          - {{ .Address }}
+        topics: []
+      txs:
+        from:
+          - {{ .Address }}
+        to:
+          - {{ .Address }}
+        methods: []
+metadata:
+  server_address: abiRPC
