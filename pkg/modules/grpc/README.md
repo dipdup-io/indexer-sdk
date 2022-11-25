@@ -6,6 +6,11 @@ The package contains basic implementation of gRPC server and client.
 
 Usage of the package will be descripted by the [example](/examples/grpc/) where time service was realized.
 
+To import module in your code write following line:
+
+```go
+import "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
+```
 
 ### Protocol
 
@@ -47,7 +52,7 @@ type Server struct {
 	*grpc.Server
 	pb.UnimplementedTimeServiceServer
 
-	subscriptions *grpc.Subscriptions[any, *pb.Response]
+	subscriptions *grpc.Subscriptions[time.Time, *pb.Response]
 
 	wg *sync.WaitGroup
 }
@@ -92,23 +97,26 @@ func (server *Server) UnsubscribeFromTime(ctx context.Context, req *generalPB.Un
 `DefaultSubscribeOn` has the notation:
 
 ```go
-func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P]) error
+func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P])  error
 ```
 
 
 `DefaultUnsubscribe` has the notation:
 
 ```go 
-func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P], id messages.SubscriptionID) (*pb.UnsubscribeResponse, error) 
+func DefaultUnsubscribe[T any, P any](ctx context.Context, subscriptions *Subscriptions[T, P], subscriptionID uint64) (*pb.UnsubscribeResponse, error)
 ```
 
 ### Client
 
-Inherit of `Client` module and generated client to implement custom gRPC client module.
+Inherit of `Client` module and generated client to implement custom gRPC client module. Also you should create output of this module to add it in the workflow.
 
 ```go
 type Client struct {
 	*grpc.Client
+
+	output *modules.Output
+
 	client pb.TimeServiceClient
 	wg     *sync.WaitGroup
 }
@@ -126,16 +134,14 @@ func (client *Client) Start(ctx context.Context) {
 Then implement `SubscribeOnXXX` and `UnsubscribeFromXXX` methods. Code below describes how to connect to server and notifies all client's subscribers about new event.
 
 ```go
-// SubscribeOnMetadata -
-func (client *Client) SubscribeOnTime(ctx context.Context, s *messages.Subscriber) (messages.SubscriptionID, error) {
+// SubscribeOnTime -
+func (client *Client) SubscribeOnTime(ctx context.Context) (uint64, error) {
 	stream, err := client.client.SubscribeOnTime(ctx, new(pb.Request))
 	if err != nil {
 		return 0, err
 	}
 
 	return grpc.Subscribe[*pb.Response](
-		client.Publisher(),
-		s,
 		stream,
 		client.handleTime,
 		client.wg,
@@ -148,25 +154,50 @@ func (client *Client) handleTime(ctx context.Context, data *pb.Response, id mess
 	return nil
 }
 
-// UnsubscribeFromTime -
-func (client *Client) UnsubscribeFromTime(ctx context.Context, s *messages.Subscriber, id messages.SubscriptionID) error {
-	subscriptionID, ok := id.(uint64)
-	if !ok {
-		return errors.New("invalid subscription id")
-	}
+func (client *Client) handleTime(ctx context.Context, data *pb.Response, id uint64) error {
+	client.output.Push(data)
+	return nil
+}
 
+// UnsubscribeFromTime -
+func (client *Client) UnsubscribeFromTime(ctx context.Context, id uint64) error {
 	if _, err := client.client.UnsubscribeFromTime(ctx, &generalPB.UnsubscribeRequest{
-		Id: subscriptionID,
+		Id: id,
 	}); err != nil {
 		return err
 	}
-
-	client.Publisher().Unsubscribe(s, id)
 	return nil
 }
 ```
 
 `handleTime` is a hadler which called on receiving new event from server.
+
+Also you need implement `Module` interface. It's described [here](/pkg/modules/). For example:
+
+```go
+// Input -
+func (client *Client) Input(name string) (*modules.Input, error) {
+	return nil, errors.Wrap(modules.ErrUnknownInput, name)
+}
+
+// Output -
+func (client *Client) Output(name string) (*modules.Output, error) {
+	if name != "time" {
+		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
+	}
+	return client.output, nil
+}
+
+// AttachTo -
+func (client *Client) AttachTo(name string, input *modules.Input) error {
+	output, err := client.Output(name)
+	if err != nil {
+		return err
+	}
+	output.Attach(input)
+	return nil
+}
+```
 
 ### Program
 
@@ -177,14 +208,22 @@ package main
 
 import (
 	"context"
+	"os"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 )
 
 func main() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		TimeFormat: "2006-01-02 15:04:05",
+	})
+
 	bind := "127.0.0.1:8889"
 	serverCfg := grpc.ServerConfig{
 		Bind: bind,
@@ -197,16 +236,12 @@ func main() {
 		return
 	}
 
-	// creating custom module which receives notification from client and log it to console.
-	module := NewCustomModule()
-
 	// creating client module
 	client := NewClient(bind)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	// starting all modules
-	module.Start(ctx)
 	server.Start(ctx)
 
 	if err := client.Connect(ctx); err != nil {
@@ -216,16 +251,26 @@ func main() {
 	client.Start(ctx)
 
 	// subscribing to time
-	subscriptionID, err := client.SubscribeOnTime(ctx, module.Subscriber)
+	subscriptionID, err := client.SubscribeOnTime(ctx)
 	if err != nil {
 		log.Panic().Err(err).Msg("subscribing error")
 		return
 	}
-	log.Info().Uint64("subscription_id", subscriptionID.(uint64)).Msg("subscribed")
+	log.Info().Uint64("subscription_id", subscriptionID).Msg("subscribed")
+
+	// creating custom module which receives notification from client and log it to console.
+	module := NewCustomModule()
+
+	if err := modules.Connect(client, module, "time", "input"); err != nil {
+		log.Panic().Err(err).Msg("module connection error")
+		return
+	}
+
+	module.Start(ctx)
 
 	time.Sleep(time.Minute)
 
-	if err := client.UnsubscribeFromTime(ctx, module.Subscriber, subscriptionID); err != nil {
+	if err := client.UnsubscribeFromTime(ctx, subscriptionID); err != nil {
 		log.Panic().Err(err).Msg("unsubscribing error")
 		return
 	}

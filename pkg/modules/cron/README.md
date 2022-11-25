@@ -6,7 +6,7 @@ Cron is the module which implements a cron specific parser and notifications abo
 
 Usage of cron module is described by the [example](/examples/cron/).
 
-To import module in your code writing following line:
+To import module in your code write following line:
 
 ```go
 import "github.com/dipdup-net/indexer-sdk/pkg/modules/cron"

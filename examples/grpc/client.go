@@ -35,7 +35,7 @@ func (client *Client) Start(ctx context.Context) {
 	client.client = pb.NewTimeServiceClient(client.Connection())
 }
 
-// SubscribeOnMetadata -
+// SubscribeOnTime -
 func (client *Client) SubscribeOnTime(ctx context.Context) (uint64, error) {
 	stream, err := client.client.SubscribeOnTime(ctx, new(pb.Request))
 	if err != nil {
