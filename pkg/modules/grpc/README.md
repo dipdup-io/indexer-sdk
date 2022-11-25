@@ -201,7 +201,7 @@ func (client *Client) AttachTo(name string, input *modules.Input) error {
 
 ### Inputs ans outputs
 
-The inputs and outputs of your server and client modules must be defined by you, because the data structure and the notification or processing logic differ from project to project.
+The inputs and outputs of your server and client modules must be defined by developer, because the data structure and the notification or processing logic differ from project to project.
 
 ### Program
 
