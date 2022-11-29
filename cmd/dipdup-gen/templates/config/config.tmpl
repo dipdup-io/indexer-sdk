@@ -5,7 +5,7 @@ database:
   port: 5432
   user: ${POSTGRES_USER:-dipdup}
   password: ${POSTGRES_PASSWORD:-changeme}
-  database: ${POSTGRES_DB_NAME:-dipdup}
+  database: ${POSTGRES_DB_NAME:-{{.App}}}
   schema_name: ${POSTGRES_SCHEMA:-public}
 datasources:
   abiRPC:
@@ -21,14 +21,14 @@ indexer:
     {{ .Address }}:
       head: true
       logs:
-        contracts:
-          - {{ .Address }}
-        topics: []
+        - contracts:
+            - {{ .Address }}
+          topics: []
       txs:
-        from:
-          - {{ .Address }}
-        to:
-          - {{ .Address }}
-        methods: []
+        - from:
+            - {{ .Address }}
+          to:
+            - {{ .Address }}
+          methods: []
 metadata:
   server_address: abiRPC

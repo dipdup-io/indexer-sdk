@@ -71,12 +71,16 @@ func main() {
 
 	indexer := layer2.NewIndexer(client, "{{ .Address }}", grpc.Subscriptions{
 		Head: true,
-		Logs: &grpc.LogsConfig{
-			Contracts: []string{"{{ .Address }}"},
+		Logs: []grpc.LogPattern{
+			{
+				Contracts: []string{"{{ .Address }}"},
+			},
 		},
-		Txs: &grpc.TxsConfig{
-			From: []string{"{{ .Address }}"},
-			To:   []string{"{{ .Address }}"},
+		Txs: []grpc.TxPattern{
+			{
+				From: []string{"{{ .Address }}"},
+				To:   []string{"{{ .Address }}"},
+			},
 		},
 	})
 
@@ -92,6 +96,8 @@ func main() {
 		cancel()
 		return
 	}
+	client.Start(ctx)
+	abiClient.Start(ctx)
 
 	metadata, err := abiClient.GetMetadata(ctx, "{{.Address}}")
 	if err != nil {
@@ -106,10 +112,10 @@ func main() {
 	}
 
 	dcdr := NewEVMDecoder(map[string]*abi.ABI{
-		"0x002b1ee9B1CF77233F9f96Fc9ee6191D2b857Be2": &contractABI,
+		"{{ .Address }}": &contractABI,
 	})
 
-	if err := modules.Connect(client, dcdr, layer2.OutputTransactions, InputTransactions); err != nil {
+	if err := modules.Connect(indexer, dcdr, layer2.OutputTransactions, InputTransactions); err != nil {
 		log.Panic().Err(err).Msg("creating module connection")
 		return
 	}
@@ -121,15 +127,13 @@ func main() {
 	}
 
 	{{ range $model, $value := .Models -}}
-	if err := modules.Connect(client, dcdr, Output{{ $model }}, InputPostgres{{ $model }}); err != nil {
+	if err := modules.Connect(dcdr, pg, Output{{ $model }}, InputPostgres{{ $model }}); err != nil {
 		log.Panic().Err(err).Msg("creating module connection")
 		return
 	}
 	{{ end -}}
 
 	pg.Start(ctx)
-	client.Start(ctx)
-	abiClient.Start(ctx)
 	dcdr.Start(ctx)
 	indexer.Start(ctx)
 
@@ -139,7 +143,7 @@ func main() {
 	<-signals
 	cancel()
 
-	if err := indexer.Close(ctx); err != nil {
+	if err := indexer.CloseWithContext(ctx); err != nil {
 		log.Err(err).Msg("closing layer 1 indexer module error")
 	}
 	if err := dcdr.Close(); err != nil {

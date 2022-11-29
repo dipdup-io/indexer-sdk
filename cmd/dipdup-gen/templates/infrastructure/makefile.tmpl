@@ -1,0 +1,14 @@
+-include .env
+export $(shell sed 's/=.*//' .env)
+
+{{.App}}:
+	cd cmd/{{.App}} && go run .  -c ../../build/dipdup.yml
+
+up:
+	docker-compose up -d --build
+
+down:
+	docker-compose down
+
+clear:
+	docker-compose down -v

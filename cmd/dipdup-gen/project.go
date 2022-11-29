@@ -10,7 +10,7 @@ type projectDirs struct {
 	storage  string
 	postgres string
 	cmd      string
-	configs  string
+	build    string
 }
 
 func createProjectDirs(rootDir, app string) (*projectDirs, error) {
@@ -37,14 +37,14 @@ func createProjectDirs(rootDir, app string) (*projectDirs, error) {
 			return nil, err
 		}
 	}
-	dirs.configs = filepath.Join(rootDir, "configs")
-	if err := os.MkdirAll(dirs.configs, os.ModePerm); err != nil {
+	dirs.cmd = filepath.Join(rootDir, "cmd", app)
+	if err := os.MkdirAll(dirs.cmd, os.ModePerm); err != nil {
 		if !os.IsExist(err) {
 			return nil, err
 		}
 	}
-	dirs.cmd = filepath.Join(rootDir, "cmd", app)
-	if err := os.MkdirAll(dirs.cmd, os.ModePerm); err != nil {
+	dirs.build = filepath.Join(rootDir, "build")
+	if err := os.MkdirAll(dirs.build, os.ModePerm); err != nil {
 		if !os.IsExist(err) {
 			return nil, err
 		}

@@ -3,7 +3,7 @@ module github.com/dipdup-net/indexer-sdk
 go 1.19
 
 require (
-	github.com/dipdup-net/go-lib v0.2.23
+	github.com/dipdup-net/go-lib v0.2.24
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-pg/pg/v10 v10.10.7
 	github.com/iancoleman/strcase v0.2.0

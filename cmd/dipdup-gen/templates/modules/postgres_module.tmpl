@@ -8,6 +8,7 @@ import (
 	"{{ .PackageName }}/internal/storage/postgres"
 	"{{ .PackageName }}/internal/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -41,6 +42,30 @@ func NewPostgres() *Postgres {
 // Name -
 func (*Postgres) Name() string {
 	return "postgres"
+}
+
+// Input -
+func (pg *Postgres) Input(name string) (*modules.Input, error) {
+	input, ok := pg.inputs[name]
+	if !ok {
+		return nil, errors.Wrap(modules.ErrUnknownInput, name)
+	}
+	return input, nil
+}
+
+// Output -
+func (pg *Postgres) Output(name string) (*modules.Output, error) {
+	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
+}
+
+// AttachTo -
+func (pg *Postgres) AttachTo(name string, input *modules.Input) error {
+	output, err := pg.Output(name)
+	if err != nil {
+		return err
+	}
+	output.Attach(input)
+	return nil
 }
 
 // Connect -

@@ -1,0 +1,36 @@
+# ---------------------------------------------------------------------
+#  The first stage container, for building the application
+# ---------------------------------------------------------------------
+FROM golang:1.19-alpine as builder
+
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+ENV GOOS=linux
+
+RUN apk --no-cache add ca-certificates
+RUN apk add --update git musl-dev gcc build-base
+
+RUN mkdir -p $GOPATH/src/{{.PackageName}}/
+
+COPY ./go.* $GOPATH/src/{{.PackageName}}/
+WORKDIR $GOPATH/src/{{.PackageName}}
+RUN go mod download
+
+COPY cmd/{{.App}} cmd/{{.App}}
+COPY internal internal
+
+WORKDIR $GOPATH/src/{{.PackageName}}/cmd/{{.App}}/
+RUN go build -a -o /go/bin/{{.App}} .
+
+# ---------------------------------------------------------------------
+#  The second stage container, for running the application
+# ---------------------------------------------------------------------
+FROM scratch
+
+WORKDIR /app/{{.App}}/
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /go/bin/{{.App}} /go/bin/{{.App}}
+COPY ./build/*.yml ./
+
+ENTRYPOINT ["/go/bin/{{.App}}"]

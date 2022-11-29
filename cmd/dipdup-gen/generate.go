@@ -115,8 +115,28 @@ func applyTemplates(args cmdLine, dirs *projectDirs, result *generateResult) err
 		return err
 	}
 
-	if err := generateFromTemplate("dipdup.yml", "config.tmpl", dirs.configs, map[string]any{
+	if err := generateFromTemplate("dipdup.yml", "config.tmpl", dirs.build, map[string]any{
 		"Address": args.address,
+		"App":     args.appName,
+	}, false); err != nil {
+		return err
+	}
+
+	if err := generateFromTemplate("Dockerfile", "Dockerfile.tmpl", dirs.build, map[string]any{
+		"App":         args.appName,
+		"PackageName": args.packageName,
+	}, false); err != nil {
+		return err
+	}
+
+	if err := generateFromTemplate("docker-compose.yml", "compose.tmpl", dirs.root, map[string]any{
+		"App": args.appName,
+	}, false); err != nil {
+		return err
+	}
+
+	if err := generateFromTemplate("Makefile", "makefile.tmpl", dirs.root, map[string]any{
+		"App": args.appName,
 	}, false); err != nil {
 		return err
 	}
