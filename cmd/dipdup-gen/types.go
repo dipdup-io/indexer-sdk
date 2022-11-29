@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	BigIntType  = "*big.Int"
 	DecimalType = "*decimal.Decimal"
 	StringType  = "string"
 )
@@ -31,7 +30,7 @@ func (f *field) Tags() string {
 	switch f.Type {
 	case "bool":
 		tag.WriteString(` pg:"default:false"`)
-	case BigIntType:
+	case DecimalType:
 		tag.WriteString(` pg:",type:numeric"`)
 	default:
 		if f.IsNested {
@@ -40,10 +39,6 @@ func (f *field) Tags() string {
 	}
 
 	return tag.String()
-}
-
-func (f field) isBigInt() bool {
-	return strings.Contains(f.Type, BigIntType)
 }
 
 func (f field) isDecimal() bool {
@@ -55,7 +50,6 @@ type goType struct {
 	Type   string
 	Fields []field
 
-	HasBigInt  bool
 	HasDecimal bool
 }
 
@@ -87,8 +81,8 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 		count := strings.TrimPrefix(schema.Comment, "bytes")
 		resultType.Type = fmt.Sprintf("[%s]byte", count)
 	case strings.HasPrefix(schema.Comment, "uint") || strings.HasPrefix(schema.Comment, "int"):
-		resultType.Type = BigIntType
-		resultType.HasBigInt = true
+		resultType.Type = DecimalType
+		resultType.HasDecimal = true
 	case strings.HasPrefix(schema.Comment, "fixed"):
 		resultType.Type = DecimalType
 		resultType.HasDecimal = true
@@ -103,7 +97,6 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 		for title, prop := range props {
 			f := generateField(title, &prop, types)
 			resultType.Fields = append(resultType.Fields, f)
-			resultType.HasBigInt = resultType.HasBigInt || f.isBigInt()
 			resultType.HasDecimal = resultType.HasDecimal || f.isDecimal()
 		}
 	default:
@@ -131,7 +124,7 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 		count := strings.TrimPrefix(prop.Comment, "bytes")
 		f.Type = fmt.Sprintf("[%s]byte", count)
 	case strings.HasPrefix(prop.Comment, "uint") || strings.HasPrefix(prop.Comment, "int"):
-		f.Type = BigIntType
+		f.Type = DecimalType
 	case strings.HasPrefix(prop.Comment, "fixed"):
 		f.Type = DecimalType
 	case prop.Type == "array":
@@ -169,7 +162,6 @@ func generateArrayItem(name string, prop *js.JSONSchema, types map[string]goType
 			for i := range prop.Items {
 				f := generateField(prop.Items[i].Title, &prop.Items[i], types)
 				resultType.Fields = append(resultType.Fields, f)
-				resultType.HasBigInt = resultType.HasBigInt || f.isBigInt()
 				resultType.HasDecimal = resultType.HasDecimal || f.isDecimal()
 			}
 

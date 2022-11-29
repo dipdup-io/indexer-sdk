@@ -35,12 +35,20 @@ var (
 )
 
 func main() {
-	configPath := rootCmd.PersistentFlags().String("config", "dipdup.yml", "path to YAML config file")
-
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: "2006-01-02 15:04:05",
 	})
+
+	configPath := rootCmd.PersistentFlags().StringP("config", "c", "dipdup.yml", "path to YAML config file")
+	if err := rootCmd.Execute(); err != nil {
+		log.Panic().Err(err).Msg("command line execute")
+		return
+	}
+	if err := rootCmd.MarkFlagRequired("config"); err != nil {
+		log.Panic().Err(err).Msg("config command line arg is required")
+		return
+	}
 
 	var cfg Config
 	if err := config.Parse(*configPath, &cfg); err != nil {
@@ -116,6 +124,10 @@ func main() {
 	})
 
 	if err := modules.Connect(indexer, dcdr, layer2.OutputTransactions, InputTransactions); err != nil {
+		log.Panic().Err(err).Msg("creating module connection")
+		return
+	}
+	if err := modules.Connect(indexer, dcdr, layer2.OutputLogs, InputLogs); err != nil {
 		log.Panic().Err(err).Msg("creating module connection")
 		return
 	}

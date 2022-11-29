@@ -5,9 +5,6 @@ import (
 	{{ if .GoType.HasDecimal -}}
 	"github.com/shopspring/decimal"
 	{{ end -}}
-	{{ if .GoType.HasBigInt -}}
-	"math/big"
-	{{ end -}}
 )
 
 // I{{.GoType.Name}} -
