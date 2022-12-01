@@ -203,6 +203,14 @@ func (d *EVMDecoder) handleLog(l grpc.DecodedLog) error {
 		obj.Height = l.Log.Height
 		obj.Timestamp = l.Log.Time
 
+		{{ with $goTyp := (index $.Models $typ) -}}
+		{{ range $field := $goTyp.Fields -}}
+		{{ if gt $field.Index 0 -}}
+		obj.{{$field.Name}} = common.BytesToAddress(l.Decoded.Topics[{{ $field.Index }}][:])
+		{{ end -}}
+		{{ end -}}
+		{{ end }}
+
 		model := storage.{{ $typ }}FromUnpack(obj)
 		d.outputs[Output{{ $typ }}].Push(&model)
 	{{ end -}}

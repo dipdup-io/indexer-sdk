@@ -16,14 +16,14 @@ import (
 type generateResult struct {
 	methods map[string]string
 	events  map[string]string
-	models  map[string]struct{}
+	models  map[string]goType
 }
 
 func newResult() *generateResult {
 	return &generateResult{
 		methods: make(map[string]string),
 		events:  make(map[string]string),
-		models:  make(map[string]struct{}),
+		models:  make(map[string]goType),
 	}
 }
 
@@ -37,8 +37,8 @@ func (r *generateResult) merge(other *generateResult) {
 	for key, value := range other.events {
 		r.events[key] = value
 	}
-	for key := range other.models {
-		r.models[key] = struct{}{}
+	for key, value := range other.models {
+		r.models[key] = value
 	}
 }
 
@@ -161,7 +161,7 @@ func generateModels(args cmdLine, dirs *projectDirs, schema map[string]js.Type) 
 			return nil, err
 		}
 
-		result.models[inputName] = struct{}{}
+		result.models[inputName] = entityType
 
 		switch entity.Type {
 		case "method":

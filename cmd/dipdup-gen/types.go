@@ -21,6 +21,7 @@ type field struct {
 	Name       string
 	Type       string
 	UnpackType string
+	Index      int
 	IsNested   bool
 }
 
@@ -131,6 +132,7 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 	f := field{
 		RawName: title,
 		Name:    buildName(title, ""),
+		Index:   prop.Index,
 	}
 	if typ, ok := abiToGo[prop.InternalType]; ok {
 		f.Type = typ
