@@ -2,14 +2,31 @@ package storage
 
 import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	{{ if .GoType.HasDecimal -}}
+{{ if .GoType.HasBigInt -}}
+	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"math/big"
+{{ end -}}
+{{ if .GoType.HasDecimal -}}
 	"github.com/shopspring/decimal"
-	{{ end -}}
+{{ end -}}
+{{ if .GoType.HasAddress -}}
+	"github.com/ethereum/go-ethereum/common"
+{{ end -}}
 )
 
 // I{{.GoType.Name}} -
 type I{{.GoType.Name}} interface {
 	storage.Table[*{{.GoType.Name}}]
+}
+
+// {{.GoType.Name}} -
+type Unpack{{.GoType.Name}} struct {
+	ID        uint64 `json:"-"`
+	Height    uint64 `json:"-"`
+	Timestamp uint64 `json:"-"`
+	{{ range $field := .GoType.Fields -}}
+	{{$field.Name}} {{$field.UnpackType}}
+	{{ end }}
 }
 
 // {{.GoType.Name}} -
@@ -23,6 +40,24 @@ type {{.GoType.Name}} struct {
 	{{ range $field := .GoType.Fields -}}
 	{{$field.Name}} {{$field.Type}} `{{$field.Tags}}`
 	{{ end }}
+}
+
+// {{.GoType.Name}}FromUnpack - 
+func {{.GoType.Name}}FromUnpack(data Unpack{{.GoType.Name}}) {{.GoType.Name}} {
+	return {{.GoType.Name}} {
+		ID: data.ID,
+		Height: data.Height,
+		Timestamp: data.Timestamp,
+		{{ range $field := .GoType.Fields -}}
+		{{ if eq $field.UnpackType "*big.Int" -}}
+		{{$field.Name}}: postgres.NewNumeric(data.{{$field.Name}}),
+		{{ else -}}{{ if eq $field.UnpackType "common.Address" -}}
+		{{$field.Name}}: data.{{$field.Name}}.Hex(),
+		{{ else -}}
+		{{$field.Name}}: data.{{$field.Name}},
+		{{ end -}}{{ end -}}
+		{{ end }}
+	}
 }
 
 // TableName -

@@ -66,3 +66,18 @@ func In[M any](query *orm.Query, field string, arr []M) *orm.Query {
 
 	return query
 }
+
+// In - adds ANY clause to query:
+//
+//	WHERE field = Any (1,2,3)
+//
+// If length of array equals 0 condition skips.
+func Any[M any](query *orm.Query, field string, arr []M) *orm.Query {
+	if len(arr) == 0 {
+		return query
+	}
+
+	query.Where("? = ANY(?)", pg.Ident(field), pg.In(arr))
+
+	return query
+}

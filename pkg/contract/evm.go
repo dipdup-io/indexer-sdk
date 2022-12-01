@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	stdJSON "encoding/json"
 	"fmt"
+	"strings"
 
 	js "github.com/dipdup-net/indexer-sdk/pkg/jsonschema"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -51,7 +52,7 @@ func (vm *EVM) createEntrypointsSchema(contractABI abi.ABI) (map[string]js.Type,
 					Schema: js.Draft201909,
 					Type:   js.ItemTypeObject,
 				},
-				Signature: event.ID.Hex(),
+				Signature: strings.TrimPrefix(event.ID.Hex(), "0x"),
 			}
 		)
 
@@ -117,6 +118,7 @@ func getBodyByArgs(args abi.Arguments) (*js.ObjectItem, error) {
 		if err != nil {
 			return nil, err
 		}
+		argSchema.Indexed = arg.Indexed
 		body.Properties[argSchema.Title] = argSchema
 		body.Required = append(body.Required, argSchema.Title)
 	}
@@ -131,9 +133,9 @@ func createSchemaItem(name string, idx int, typ *abi.Type) (js.JSONSchema, error
 	switch typ.T {
 	case abi.AddressTy, abi.StringTy:
 		return js.JSONSchema{
-			Type:    js.ItemTypeString,
-			Title:   name,
-			Comment: typ.String(),
+			Type:         js.ItemTypeString,
+			Title:        name,
+			InternalType: typ.String(),
 		}, nil
 
 	case abi.ArrayTy, abi.SliceTy:
@@ -178,21 +180,21 @@ func createSchemaItem(name string, idx int, typ *abi.Type) (js.JSONSchema, error
 		return schema, nil
 	case abi.BoolTy:
 		return js.JSONSchema{
-			Type:    js.ItemTypeBoolean,
-			Title:   name,
-			Comment: typ.String(),
+			Type:         js.ItemTypeBoolean,
+			Title:        name,
+			InternalType: typ.String(),
 		}, nil
 	case abi.BytesTy, abi.FixedBytesTy, abi.FunctionTy:
 		return js.JSONSchema{
-			Type:    js.ItemTypeString,
-			Title:   name,
-			Comment: typ.String(),
+			Type:         js.ItemTypeString,
+			Title:        name,
+			InternalType: typ.String(),
 		}, nil
 	case abi.IntTy, abi.UintTy, abi.FixedPointTy:
 		return js.JSONSchema{
-			Type:    js.ItemTypeNumber,
-			Title:   name,
-			Comment: typ.String(),
+			Type:         js.ItemTypeNumber,
+			Title:        name,
+			InternalType: typ.String(),
 		}, nil
 	default:
 		return js.JSONSchema{}, errors.Errorf("unknown argument type: %d", typ.T)

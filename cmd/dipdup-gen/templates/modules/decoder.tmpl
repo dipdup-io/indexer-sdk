@@ -190,14 +190,16 @@ func (d *EVMDecoder) handleLog(l *pb.Log) error {
 	switch l.Topic {
 	{{ range $typ, $signature := .Events -}}
 	case "{{ $signature }}":
-		var obj storage.{{ $typ }}
+		var obj storage.Unpack{{ $typ }}
 		if err := abi.UnpackIntoInterface(&obj, event.Name, l.Data); err != nil {
 			return err
 		}
 		obj.ID = l.Id
 		obj.Height = l.Height
 		obj.Timestamp = l.Time
-		d.outputs[Output{{ $typ }}].Push(&obj)
+
+		model := storage.{{ $typ }}FromUnpack(obj)
+		d.outputs[Output{{ $typ }}].Push(&model)
 	{{ end -}}
 	default:
 	}

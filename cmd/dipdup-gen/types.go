@@ -8,15 +8,20 @@ import (
 )
 
 const (
+	BoolType    = "bool"
 	DecimalType = "*decimal.Decimal"
+	BigIntType  = "*big.Int"
+	NumericType = "*postgres.Numeric"
+	AddressType = "common.Address"
 	StringType  = "string"
 )
 
 type field struct {
-	RawName  string
-	Name     string
-	Type     string
-	IsNested bool
+	RawName    string
+	Name       string
+	Type       string
+	UnpackType string
+	IsNested   bool
 }
 
 // Tags -
@@ -28,10 +33,12 @@ func (f *field) Tags() string {
 	tag.WriteString(`"`)
 
 	switch f.Type {
-	case "bool":
+	case BoolType:
 		tag.WriteString(` pg:"default:false"`)
-	case DecimalType:
+	case NumericType:
 		tag.WriteString(` pg:",type:numeric"`)
+	case DecimalType:
+		tag.WriteString(` pg:",type:decimal(10,10)"`)
 	default:
 		if f.IsNested {
 			tag.WriteString(` pg:",type:jsonb"`)
@@ -41,8 +48,16 @@ func (f *field) Tags() string {
 	return tag.String()
 }
 
+func (f field) isBigInt() bool {
+	return f.UnpackType == BigIntType
+}
+
 func (f field) isDecimal() bool {
-	return strings.Contains(f.Type, DecimalType)
+	return f.Type == DecimalType
+}
+
+func (f field) isAddress() bool {
+	return f.UnpackType == AddressType
 }
 
 type goType struct {
@@ -51,6 +66,8 @@ type goType struct {
 	Fields []field
 
 	HasDecimal bool
+	HasBigInt  bool
+	HasAddress bool
 }
 
 var abiToGo = map[string]string{
@@ -65,7 +82,6 @@ var abiToGo = map[string]string{
 	"function": "[24]byte",
 	"bool":     "bool",
 	"string":   "string",
-	"address":  "string",
 	"bytes":    "[]byte",
 }
 
@@ -81,8 +97,8 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 		count := strings.TrimPrefix(schema.Comment, "bytes")
 		resultType.Type = fmt.Sprintf("[%s]byte", count)
 	case strings.HasPrefix(schema.Comment, "uint") || strings.HasPrefix(schema.Comment, "int"):
-		resultType.Type = DecimalType
-		resultType.HasDecimal = true
+		resultType.Type = BigIntType
+		resultType.HasBigInt = true
 	case strings.HasPrefix(schema.Comment, "fixed"):
 		resultType.Type = DecimalType
 		resultType.HasDecimal = true
@@ -98,6 +114,8 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 			f := generateField(title, &prop, types)
 			resultType.Fields = append(resultType.Fields, f)
 			resultType.HasDecimal = resultType.HasDecimal || f.isDecimal()
+			resultType.HasBigInt = resultType.HasBigInt || f.isBigInt()
+			resultType.HasAddress = resultType.HasAddress || f.isAddress()
 		}
 	default:
 		resultType.Type = "any"
@@ -116,29 +134,38 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 	}
 	if typ, ok := abiToGo[prop.Comment]; ok {
 		f.Type = typ
+		f.UnpackType = f.Type
 		return f
 	}
 
 	switch {
+	case prop.Comment == "address":
+		f.Type = "string"
+		f.UnpackType = AddressType
 	case strings.HasPrefix(prop.Comment, "bytes"):
 		count := strings.TrimPrefix(prop.Comment, "bytes")
 		f.Type = fmt.Sprintf("[%s]byte", count)
+		f.UnpackType = f.Type
 	case strings.HasPrefix(prop.Comment, "uint") || strings.HasPrefix(prop.Comment, "int"):
-		f.Type = DecimalType
+		f.Type = NumericType
+		f.UnpackType = BigIntType
 	case strings.HasPrefix(prop.Comment, "fixed"):
 		f.Type = DecimalType
+		f.UnpackType = f.Type
 	case prop.Type == "array":
 		goTyp := generateArrayItem(f.Name, prop, types)
 		f.Type = fmt.Sprintf("[]%s", goTyp.Type)
+		f.UnpackType = f.Type
 	case prop.Type == "object":
 		goTyp := generateTypes(f.Name, "Type", prop, types)
 		f.Type = goTyp.Name
+		f.UnpackType = f.Type
 		f.IsNested = true
 	default:
 		f.Type = "any"
+		f.UnpackType = f.Type
 	}
 	return f
-
 }
 
 func generateArrayItem(name string, prop *js.JSONSchema, types map[string]goType) goType {
@@ -163,6 +190,8 @@ func generateArrayItem(name string, prop *js.JSONSchema, types map[string]goType
 				f := generateField(prop.Items[i].Title, &prop.Items[i], types)
 				resultType.Fields = append(resultType.Fields, f)
 				resultType.HasDecimal = resultType.HasDecimal || f.isDecimal()
+				resultType.HasBigInt = resultType.HasBigInt || f.isBigInt()
+				resultType.HasAddress = resultType.HasAddress || f.isAddress()
 			}
 
 			return resultType

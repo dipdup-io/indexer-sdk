@@ -21,6 +21,9 @@ type JSONSchema struct {
 	Examples    []any  `json:"examples,omitempty"`
 	Enum        []any  `json:"enum,omitempty"`
 
+	InternalType string `json:"internal_type"`
+	Indexed      bool   `json:"indexed"`
+
 	Type        ItemType `json:"type"`
 	*StringItem `json:",omitempty"`
 	*NumberItem `json:",omitempty"`
