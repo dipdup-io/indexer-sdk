@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/dipdup-net/evm-indexer/pkg/modules/grpc/pb"
-	"github.com/dipdup-net/evm-indexer/pkg/modules/grpc"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
+	"github.com/dipdup-net/indexer-sdk/pkg/rlp"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
@@ -170,6 +170,12 @@ func (d *EVMDecoder) handleTransaction(tx *pb.Tx) error {
 		obj.Height = tx.Height
 		obj.Timestamp = tx.Time
 		d.outputs[Output{{ $typ }}].Push(&obj)
+		log.Info().
+			Str("name", "{{ $typ }}").
+			Str("id", "{{ $signature }}").
+			Uint64("height", tx.Height).
+			Msg("new transaction")
+
 	{{ end -}}
 	default:
 	}
@@ -185,7 +191,7 @@ func (d *EVMDecoder) handleLog(l *pb.Log) error {
 	if !ok {
 		return errors.Errorf("unknown contract abi for decoding: %s", l.Contract)
 	}
-	decoded, err := rlp.DecodeLogData(l)
+	decoded, err := rlp.DecodeLogData(l.Data)
 	if err != nil {
 		return err
 	}
@@ -203,7 +209,7 @@ func (d *EVMDecoder) handleLog(l *pb.Log) error {
 	{{ range $typ, $signature := .Events -}}
 	case "{{ $signature }}":
 		var obj storage.Unpack{{ $typ }}
-		if err := abi.UnpackIntoInterface(&obj, event.Name, l.Data); err != nil {
+		if err := abi.UnpackIntoInterface(&obj, event.Name, decoded.Data); err != nil {
 			return err
 		}
 		obj.ID = l.Id
@@ -220,6 +226,12 @@ func (d *EVMDecoder) handleLog(l *pb.Log) error {
 
 		model := storage.{{ $typ }}FromUnpack(obj)
 		d.outputs[Output{{ $typ }}].Push(&model)
+		log.Info().
+			Str("name", "{{ $typ }}").
+			Str("id", "{{ $signature }}").
+			Uint64("height", l.Height).
+			Msg("new event")
+
 	{{ end -}}
 	default:
 	}
