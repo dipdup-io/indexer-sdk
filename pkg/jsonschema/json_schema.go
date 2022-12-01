@@ -22,7 +22,7 @@ type JSONSchema struct {
 	Enum        []any  `json:"enum,omitempty"`
 
 	InternalType string `json:"internal_type"`
-	Indexed      bool   `json:"indexed"`
+	Index        int    `json:"index,omitempty"`
 
 	Type        ItemType `json:"type"`
 	*StringItem `json:",omitempty"`

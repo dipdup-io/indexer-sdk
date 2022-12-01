@@ -179,7 +179,7 @@ func generateStorageBySchema(typ goType, name, dir, templateName, packageName st
 		"GoType":      typ,
 		"PackageName": packageName,
 		"Nested":      types,
-	}, false)
+	}, true)
 }
 
 func generateFromTemplate(outputName, templateFileName, dest string, ctx interface{}, needFormat bool) error {

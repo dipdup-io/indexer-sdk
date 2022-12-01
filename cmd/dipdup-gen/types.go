@@ -93,16 +93,16 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 	}
 
 	switch {
-	case strings.HasPrefix(schema.Comment, "bytes"):
-		count := strings.TrimPrefix(schema.Comment, "bytes")
+	case strings.HasPrefix(schema.InternalType, "bytes"):
+		count := strings.TrimPrefix(schema.InternalType, "bytes")
 		resultType.Type = fmt.Sprintf("[%s]byte", count)
-	case strings.HasPrefix(schema.Comment, "uint") || strings.HasPrefix(schema.Comment, "int"):
+	case strings.HasPrefix(schema.InternalType, "uint") || strings.HasPrefix(schema.InternalType, "int"):
 		resultType.Type = BigIntType
 		resultType.HasBigInt = true
-	case strings.HasPrefix(schema.Comment, "fixed"):
+	case strings.HasPrefix(schema.InternalType, "fixed"):
 		resultType.Type = DecimalType
 		resultType.HasDecimal = true
-	case schema.Comment == "address":
+	case schema.InternalType == "address":
 		resultType.Type = StringType
 	case schema.Type == "object":
 		var props map[string]js.JSONSchema
@@ -132,24 +132,24 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 		RawName: title,
 		Name:    buildName(title, ""),
 	}
-	if typ, ok := abiToGo[prop.Comment]; ok {
+	if typ, ok := abiToGo[prop.InternalType]; ok {
 		f.Type = typ
 		f.UnpackType = f.Type
 		return f
 	}
 
 	switch {
-	case prop.Comment == "address":
+	case prop.InternalType == "address":
 		f.Type = "string"
 		f.UnpackType = AddressType
-	case strings.HasPrefix(prop.Comment, "bytes"):
-		count := strings.TrimPrefix(prop.Comment, "bytes")
+	case strings.HasPrefix(prop.InternalType, "bytes"):
+		count := strings.TrimPrefix(prop.InternalType, "bytes")
 		f.Type = fmt.Sprintf("[%s]byte", count)
 		f.UnpackType = f.Type
-	case strings.HasPrefix(prop.Comment, "uint") || strings.HasPrefix(prop.Comment, "int"):
+	case strings.HasPrefix(prop.InternalType, "uint") || strings.HasPrefix(prop.InternalType, "int"):
 		f.Type = NumericType
 		f.UnpackType = BigIntType
-	case strings.HasPrefix(prop.Comment, "fixed"):
+	case strings.HasPrefix(prop.InternalType, "fixed"):
 		f.Type = DecimalType
 		f.UnpackType = f.Type
 	case prop.Type == "array":

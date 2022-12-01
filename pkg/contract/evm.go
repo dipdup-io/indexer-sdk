@@ -113,12 +113,17 @@ func getBodyByArgs(args abi.Arguments) (*js.ObjectItem, error) {
 		Properties: make(map[string]js.JSONSchema),
 		Required:   []string{},
 	}
+
+	var index int
 	for idx, arg := range args {
 		argSchema, err := createSchemaItem(arg.Name, idx, &arg.Type)
 		if err != nil {
 			return nil, err
 		}
-		argSchema.Indexed = arg.Indexed
+		if arg.Indexed {
+			index++
+			argSchema.Index = index
+		}
 		body.Properties[argSchema.Title] = argSchema
 		body.Required = append(body.Required, argSchema.Title)
 	}
