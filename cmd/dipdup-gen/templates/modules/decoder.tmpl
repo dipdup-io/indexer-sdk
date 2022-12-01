@@ -115,14 +115,17 @@ func (d *EVMDecoder) listen(ctx context.Context) {
 			if !ok {
 				return
 			}
-			l, ok := msg.(grpc.DecodedLog)
-			if !ok {
-				continue
-			}
-
-			if err := d.handleLog(l); err != nil {
-				log.Err(err).Msg("decoding log error")
-				continue
+			switch l := msg.(type) {
+			case *pb.SubscriptionLog:
+				if err := d.handleLog(l.Log); err != nil {
+					log.Err(err).Msg("decoding log error")
+					continue
+				}
+			case *pb.Log:
+				if err := d.handleLog(l); err != nil {
+					log.Err(err).Msg("decoding log error")
+					continue
+				}
 			}
 		}
 	}
@@ -174,19 +177,23 @@ func (d *EVMDecoder) handleTransaction(tx *pb.Tx) error {
 	return nil
 	{{ end -}}
 }
-func (d *EVMDecoder) handleLog(l grpc.DecodedLog) error {
+func (d *EVMDecoder) handleLog(l *pb.Log) error {
 	{{ if not .Events -}}
 	return nil
 	{{ else -}}
-	abi, ok := d.abis[l.Log.Contract]
+	abi, ok := d.abis[l.Contract]
 	if !ok {
-		return errors.Errorf("unknown contract abi for decoding: %s", l.Log.Contract)
+		return errors.Errorf("unknown contract abi for decoding: %s", l.Contract)
 	}
-	if len(l.Decoded.Topics) == 0 {
+	decoded, err := rlp.DecodeLogData(l)
+	if err != nil {
+		return err
+	}
+	if len(decoded.Topics) == 0 {
 		return nil
 	}
 
-	eventID := common.BytesToHash(l.Decoded.Topics[0][:])
+	eventID := common.BytesToHash(decoded.Topics[0][:])
 	event, err := abi.EventByID(eventID)
 	if err != nil {
 		return err
@@ -196,17 +203,17 @@ func (d *EVMDecoder) handleLog(l grpc.DecodedLog) error {
 	{{ range $typ, $signature := .Events -}}
 	case "{{ $signature }}":
 		var obj storage.Unpack{{ $typ }}
-		if err := abi.UnpackIntoInterface(&obj, event.Name, l.Log.Data); err != nil {
+		if err := abi.UnpackIntoInterface(&obj, event.Name, l.Data); err != nil {
 			return err
 		}
-		obj.ID = l.Log.Id
-		obj.Height = l.Log.Height
-		obj.Timestamp = l.Log.Time
+		obj.ID = l.Id
+		obj.Height = l.Height
+		obj.Timestamp = l.Time
 
 		{{ with $goTyp := (index $.Models $typ) -}}
 		{{ range $field := $goTyp.Fields -}}
 		{{ if gt $field.Index 0 -}}
-		obj.{{$field.Name}} = common.BytesToAddress(l.Decoded.Topics[{{ $field.Index }}][:])
+		obj.{{$field.Name}} = common.BytesToAddress(decoded.Topics[{{ $field.Index }}][:])
 		{{ end -}}
 		{{ end -}}
 		{{ end }}
