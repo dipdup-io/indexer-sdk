@@ -153,6 +153,7 @@ func generateModels(args cmdLine, dirs *projectDirs, schema map[string]js.Type) 
 
 		entityType := generateTypes(name, entity.Type, entity.Inputs, types)
 		delete(types, entityType.Name)
+		entityType.Kind = entity.Type
 
 		if err := generateStorageBySchema(entityType, inputName, dirs.storage, "model.tmpl", args.packageName, types); err != nil {
 			return nil, err

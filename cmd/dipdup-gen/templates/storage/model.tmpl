@@ -21,9 +21,12 @@ type I{{.GoType.Name}} interface {
 
 // {{.GoType.Name}} -
 type Unpack{{.GoType.Name}} struct {
-	ID        uint64 `json:"-"`
-	Height    uint64 `json:"-"`
-	Timestamp uint64 `json:"-"`
+	ID        uint64
+	Height    uint64
+	Timestamp uint64
+	{{ if eq .GoType.Kind "method" -}}
+	TxHash    string
+	{{ end -}}
 	{{ range $field := .GoType.Fields -}}
 	{{$field.Name}} {{$field.UnpackType}}
 	{{ end }}
@@ -34,9 +37,12 @@ type {{.GoType.Name}} struct {
 	// nolint
 	tableName struct{} `pg:"{{.GoType.Name}}"`
 
-	ID        uint64 `json:"-"`
-	Height    uint64 `json:"-"`
-	Timestamp uint64 `json:"-"`
+	ID        uint64
+	Height    uint64
+	Timestamp uint64
+	{{ if eq .GoType.Kind "method" -}}
+	TxHash    string
+	{{ end -}}
 	{{ range $field := .GoType.Fields -}}
 	{{$field.Name}} {{$field.Type}} `{{$field.Tags}}`
 	{{ end }}
@@ -48,6 +54,9 @@ func {{.GoType.Name}}FromUnpack(data Unpack{{.GoType.Name}}) {{.GoType.Name}} {
 		ID: data.ID,
 		Height: data.Height,
 		Timestamp: data.Timestamp,
+		{{ if eq .GoType.Kind "method" -}}
+		TxHash: data.TxHash,
+		{{ end -}}
 		{{ range $field := .GoType.Fields -}}
 		{{ if eq $field.UnpackType "*big.Int" -}}
 		{{$field.Name}}: postgres.NewNumeric(data.{{$field.Name}}),

@@ -17,18 +17,18 @@ import (
 
 // decoder input and output names
 const (
-	InputTransactions = "transactions"
-	InputLogs = "logs"
-
+	InputMessages = "messages"
 	{{ range $typ, $value := .Models -}}
 	Output{{ $typ }} = "{{ $typ }}"
 	{{ end -}}
+	OutputBlocks = "blocks"
+	OutputEndOfBlock = "end_of_block"
 )
 
 // EVMDecoder -
 type EVMDecoder struct {
-	inputs map[string]*modules.Input
-	outputs map[string]*modules.Output
+	input *modules.Input
+	outputs map[string]*modules.Output	
 
 	abis      map[string]*abi.ABI
 
@@ -38,14 +38,13 @@ type EVMDecoder struct {
 // NewEVMDecoder -
 func NewEVMDecoder(abis map[string]*abi.ABI) *EVMDecoder {
 	return &EVMDecoder{
-		inputs: map[string]*modules.Input{
-			InputTransactions: modules.NewInput(InputTransactions),
-			InputLogs: modules.NewInput(InputLogs),
-		},
+		input: modules.NewInput(InputMessages),
 		outputs: map[string]*modules.Output{
 			{{ range $typ, $value := .Models -}}
 			Output{{ $typ }}:  modules.NewOutput(Output{{ $typ }}),
 			{{ end -}}	
+			OutputBlocks: modules.NewOutput(OutputBlocks),
+			OutputEndOfBlock: modules.NewOutput(OutputEndOfBlock),
 		},
 		abis:       abis,
 		wg:         new(sync.WaitGroup),
@@ -58,12 +57,11 @@ func (d *EVMDecoder) Name() string {
 }
 
 // Input -
-func (d *EVMDecoder) Input(name string) (*modules.Input, error) {
-	input, ok := d.inputs[name]
-	if !ok {
+func (d *EVMDecoder) Input(name string) (*modules.Input, error) {	
+	if name != InputMessages {
 		return nil, errors.Wrap(modules.ErrUnknownInput, name)
 	}
-	return input, nil
+	return d.input, nil
 }
 
 // Output -
@@ -99,34 +97,28 @@ func (d *EVMDecoder) listen(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case msg, ok := <-d.inputs[InputTransactions].Listen():
+		case msg, ok := <-d.input.Listen():
 			if !ok {
 				return
 			}
-			tx, ok := msg.(*pb.Tx)
+			message, ok := msg.(*pb.Subscription)
 			if !ok {
 				continue
 			}
-			if err := d.handleTransaction(tx); err != nil {
-				log.Err(err).Msg("decoding transaction error")
-				continue
-			}
-		case msg, ok := <-d.inputs[InputLogs].Listen():
-			if !ok {
-				return
-			}
-			switch l := msg.(type) {
-			case *pb.SubscriptionLog:
-				if err := d.handleLog(l.Log); err != nil {
-					log.Err(err).Msg("decoding log error")
-					continue
+			switch {
+			case message.Block != nil:
+				d.outputs[OutputBlocks].Push(message.Block)
+			case message.Transaction != nil:
+				if err := d.handleTransaction(message.Transaction); err != nil {
+					log.Err(err).Msg("decoding transaction error")
 				}
-			case *pb.Log:
-				if err := d.handleLog(l); err != nil {
+			case message.Log != nil:
+				if err := d.handleLog(message.Log); err != nil {
 					log.Err(err).Msg("decoding log error")
-					continue
 				}
-			}
+			case message.EndOfBlock:
+				d.outputs[OutputEndOfBlock].Push(struct{}{})
+			}			
 		}
 	}
 }
@@ -134,14 +126,7 @@ func (d *EVMDecoder) listen(ctx context.Context) {
 // Close -
 func (d *EVMDecoder) Close() error {
 	d.wg.Wait()
-
-	for _, input := range d.inputs {
-		if err := input.Close(); err != nil {
-			return err
-		} 
-	}
-
-	return nil
+	return d.input.Close()
 }
 
 func (d *EVMDecoder) handleTransaction(tx *pb.Tx) error {
@@ -169,6 +154,7 @@ func (d *EVMDecoder) handleTransaction(tx *pb.Tx) error {
 		obj.ID = tx.Id
 		obj.Height = tx.Height
 		obj.Timestamp = tx.Time
+		obj.TxHash = tx.Hash
 		d.outputs[Output{{ $typ }}].Push(&obj)
 		log.Info().
 			Str("name", "{{ $typ }}").

@@ -97,8 +97,10 @@ func (server *Server) UnsubscribeFromTime(ctx context.Context, req *generalPB.Un
 `DefaultSubscribeOn` has the notation:
 
 ```go
-func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P])  error
+func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P], handler func(id uint64) error)  error
 ```
+
+`handler` is the function which calls after subscription response before real-time subscription. You can realize synchronization process by handler.
 
 
 `DefaultUnsubscribe` has the notation:

@@ -7,12 +7,15 @@ import (
 	"github.com/dipdup-net/go-lib/config"
 	"{{ .PackageName }}/internal/storage/postgres"
 	"{{ .PackageName }}/internal/storage"
+	"github.com/dipdup-net/evm-indexer/pkg/modules/grpc/pb"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
 const (
+	InputPostgresBlocks = "blocks"
+	InputPostgresEndOfBlock = "end_of_block"
 	{{ range $model, $value := .Models -}}
 	InputPostgres{{ $model }} = "{{ $model }}"
 	{{ end -}}
@@ -34,6 +37,8 @@ func NewPostgres() *Postgres {
 			{{ range $model, $value := .Models -}}
 			InputPostgres{{ $model }}: modules.NewInput(InputPostgres{{ $model }}),
 			{{ end -}}
+			InputPostgresBlocks: modules.NewInput(InputPostgresBlocks),
+			InputPostgresEndOfBlock: modules.NewInput(InputPostgresEndOfBlock),
 		},
 		wg:         new(sync.WaitGroup),
 	}
@@ -91,6 +96,20 @@ func (pg *Postgres) listen(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case msg, ok := <-pg.inputs[InputPostgresBlocks].Listen():
+			if !ok {
+				return
+			}
+			block, ok := msg.(*pb.Block)
+			if !ok {
+				continue
+			}
+			log.Info().Uint64("height", block.Height).Msg("block received")
+		case _, ok := <-pg.inputs[InputPostgresEndOfBlock].Listen():
+			if !ok {
+				return
+			}
+			log.Info().Msg("end of block received")
 		{{ range $model, $value := .Models -}}
 		case msg, ok := <-pg.inputs[InputPostgres{{ $model }}].Listen():
 			if !ok {

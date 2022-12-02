@@ -65,6 +65,7 @@ type goType struct {
 	Name   string
 	Type   string
 	Fields []field
+	Kind   string
 
 	HasDecimal bool
 	HasBigInt  bool

@@ -97,11 +97,8 @@ type ServerStream[T any] interface {
 var subscriptionsCounter = new(atomic.Uint64)
 
 // DefaultSubscribeOn - default subscribe server handler
-func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P]) error {
-	ctx := stream.Context()
-
+func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P], handler func(id uint64) error) error {
 	subscriptionID := subscriptionsCounter.Add(1)
-	subscriptions.Add(subscriptionID, subscription)
 
 	if err := stream.SendMsg(&pb.SubscribeResponse{
 		Id: subscriptionID,
@@ -109,10 +106,18 @@ func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Sub
 		return err
 	}
 
+	if handler != nil {
+		if err := handler(subscriptionID); err != nil {
+			return err
+		}
+	}
+
+	subscriptions.Add(subscriptionID, subscription)
+
 loop:
 	for {
 		select {
-		case <-ctx.Done():
+		case <-stream.Context().Done():
 			break loop
 		case msg, ok := <-subscription.Listen():
 			if !ok {

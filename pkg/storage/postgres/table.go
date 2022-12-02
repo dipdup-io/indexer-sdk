@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"errors"
+	"reflect"
 
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
@@ -43,7 +44,15 @@ func (s *Table[M]) List(ctx context.Context, limit, offset uint64, order storage
 
 // GetByID - returns row by id
 func (s *Table[M]) GetByID(ctx context.Context, id uint64) (m M, err error) {
-	err = s.db.DB().ModelContext(ctx, &m).Where("id = ?", id).First()
+	typ := reflect.TypeOf(m)
+	if typ.Kind() == reflect.Ptr {
+		value := reflect.New(typ.Elem())
+		val := value.Interface()
+		err = s.db.DB().ModelContext(ctx, val).Where("id = ?", id).First()
+		return val.(M), err
+	} else {
+		err = s.db.DB().ModelContext(ctx, &m).Where("id = ?", id).First()
+	}
 	return
 }
 

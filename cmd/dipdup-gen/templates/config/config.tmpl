@@ -2,7 +2,7 @@ version: 0.0.1
 database:
   kind: postgres
   host: ${POSTGRES_HOST:-127.0.0.1}
-  port: 5432
+  port: 5434
   user: ${POSTGRES_USER:-dipdup}
   password: ${POSTGRES_PASSWORD:-changeme}
   database: ${POSTGRES_DB_NAME:-{{.App}}}
@@ -19,6 +19,7 @@ indexer:
   server_address: layer1RPC
   subscriptions:
     {{ .Address }}:
+      start_block: 1
       head: true
       logs:
         - contracts:

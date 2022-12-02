@@ -78,7 +78,7 @@ func main() {
 	abiClient := abiRPC.NewClient(cfg.Metadata)
 
 	indexer := layer2.NewIndexer(client, "{{ .Address }}", grpc.Subscriptions{
-		Head: true,
+		Blocks: true,
 		Logs: []grpc.LogPattern{
 			{
 				Contracts: []string{"{{ .Address }}"},
@@ -123,11 +123,7 @@ func main() {
 		"{{ .Address }}": &contractABI,
 	})
 
-	if err := modules.Connect(indexer, dcdr, layer2.OutputTransactions, InputTransactions); err != nil {
-		log.Panic().Err(err).Msg("creating module connection")
-		return
-	}
-	if err := modules.Connect(indexer, dcdr, layer2.OutputLogs, InputLogs); err != nil {
+	if err := modules.Connect(indexer, dcdr, layer2.OutputMessages, InputMessages); err != nil {
 		log.Panic().Err(err).Msg("creating module connection")
 		return
 	}
@@ -138,6 +134,14 @@ func main() {
 		return
 	}
 
+	if err := modules.Connect(dcdr, pg, OutputBlocks, InputPostgresBlocks); err != nil {
+		log.Panic().Err(err).Msg("creating module connection")
+		return
+	}
+	if err := modules.Connect(dcdr, pg, OutputEndOfBlock, InputPostgresEndOfBlock); err != nil {
+		log.Panic().Err(err).Msg("creating module connection")
+		return
+	}
 	{{ range $model, $value := .Models -}}
 	if err := modules.Connect(dcdr, pg, Output{{ $model }}, InputPostgres{{ $model }}); err != nil {
 		log.Panic().Err(err).Msg("creating module connection")
