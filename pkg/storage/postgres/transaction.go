@@ -92,3 +92,13 @@ func (t *Transaction) HandleError(ctx context.Context, err error) error {
 	}
 	return processorErr
 }
+
+// Exec -
+func (t *Transaction) Exec(ctx context.Context, query any, params ...any) error {
+	if t.tx == nil {
+		return errNilTx
+	}
+
+	_, err := t.tx.ExecContext(ctx, query, params...)
+	return err
+}
