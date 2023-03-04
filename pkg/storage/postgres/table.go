@@ -75,3 +75,13 @@ func (s *Table[M]) CursorList(ctx context.Context, id, limit uint64, order stora
 	err := query.Select(&models)
 	return models, err
 }
+
+// LastID - returns last used id
+func (s *Table[M]) LastID(ctx context.Context) (uint64, error) {
+	var (
+		m  M
+		id uint64
+	)
+	err := s.DB().ModelContext(ctx, m).ColumnExpr("max(id)").Select(&id)
+	return id, err
+}

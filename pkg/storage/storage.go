@@ -52,6 +52,7 @@ type Table[M Model] interface {
 	Update(ctx context.Context, m M) error
 	List(ctx context.Context, limit, offset uint64, order SortOrder) ([]M, error)
 	CursorList(ctx context.Context, id, limit uint64, order SortOrder, cmp Comparator) ([]M, error)
+	LastID(ctx context.Context) (uint64, error)
 
 	IsNoRows(err error) bool
 }
