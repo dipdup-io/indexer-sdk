@@ -93,12 +93,12 @@ func (t *Transaction) HandleError(ctx context.Context, err error) error {
 	return processorErr
 }
 
-// Exec -
-func (t *Transaction) Exec(ctx context.Context, query any, params ...any) error {
+// Exec - executes query and returns the number of affected rows
+func (t *Transaction) Exec(ctx context.Context, query any, params ...any) (int, error) {
 	if t.tx == nil {
-		return errNilTx
+		return 0, errNilTx
 	}
 
-	_, err := t.tx.ExecContext(ctx, query, params...)
-	return err
+	result, err := t.tx.ExecContext(ctx, query, params...)
+	return result.RowsAffected(), err
 }

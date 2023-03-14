@@ -71,7 +71,7 @@ type Transaction interface {
 	BulkSave(ctx context.Context, models []any) error
 	Close(ctx context.Context) error
 	HandleError(ctx context.Context, err error) error
-	Exec(ctx context.Context, query any, params ...any) error
+	Exec(ctx context.Context, query any, params ...any) (int, error)
 }
 
 // Model - general data type interface
