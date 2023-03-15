@@ -100,5 +100,8 @@ func (t *Transaction) Exec(ctx context.Context, query any, params ...any) (int, 
 	}
 
 	result, err := t.tx.ExecContext(ctx, query, params...)
-	return result.RowsAffected(), err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
