@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"io"
 )
 
 // SortOrder - asc or desc
@@ -72,6 +73,7 @@ type Transaction interface {
 	Close(ctx context.Context) error
 	HandleError(ctx context.Context, err error) error
 	Exec(ctx context.Context, query any, params ...any) (int, error)
+	CopyFrom(r io.Reader, query string, args ...any) error
 }
 
 // Model - general data type interface

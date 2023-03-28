@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"io"
 
 	"github.com/go-pg/pg/v10"
 	"github.com/pkg/errors"
@@ -104,4 +105,14 @@ func (t *Transaction) Exec(ctx context.Context, query any, params ...any) (int, 
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+// CopyFrom -
+func (t *Transaction) CopyFrom(r io.Reader, query string, args ...any) error {
+	if t.tx == nil {
+		return errNilTx
+	}
+
+	_, err := t.tx.CopyFrom(r, query, args...)
+	return err
 }
