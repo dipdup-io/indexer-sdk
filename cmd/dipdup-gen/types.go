@@ -108,7 +108,7 @@ func generateTypes(name, postfix string, schema *js.JSONSchema, types map[string
 		resultType.Type = StringType
 	case schema.Type == "object":
 		var props map[string]js.JSONSchema
-		if schema != nil && schema.ObjectItem != nil {
+		if schema != nil && schema.Type == js.ItemTypeObject {
 			props = schema.Properties
 		}
 
@@ -174,7 +174,7 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 func generateArrayItem(name string, prop *js.JSONSchema, types map[string]goType) goType {
 	name = buildName(name, "Item")
 
-	if prop.ArrayItem != nil {
+	if prop.ArrayItem.Items != nil {
 		switch len(prop.Items) {
 		case 0:
 			return goType{

@@ -61,7 +61,7 @@ func (vm *EVM) createEntrypointsSchema(contractABI abi.ABI) (map[string]js.Type,
 			return nil, err
 		}
 		if inputsBody != nil {
-			typ.Inputs.ObjectItem = inputsBody
+			typ.Inputs.ObjectItem = *inputsBody
 		}
 
 		result[event.Name] = typ
@@ -88,7 +88,7 @@ func (vm *EVM) createEntrypointsSchema(contractABI abi.ABI) (map[string]js.Type,
 			return nil, err
 		}
 		if inputsBody != nil {
-			typ.Inputs.ObjectItem = inputsBody
+			typ.Inputs.ObjectItem = *inputsBody
 		}
 
 		outputsBody, err := getBodyByArgs(method.Outputs)
@@ -96,7 +96,7 @@ func (vm *EVM) createEntrypointsSchema(contractABI abi.ABI) (map[string]js.Type,
 			return nil, err
 		}
 		if outputsBody != nil {
-			typ.Outputs.ObjectItem = outputsBody
+			typ.Outputs.ObjectItem = *outputsBody
 		}
 
 		result[method.Name] = typ
@@ -155,7 +155,7 @@ func createSchemaItem(name string, idx int, typ *abi.Type) (js.JSONSchema, error
 			return elem, err
 		}
 
-		schema.ArrayItem = &js.ArrayItem{
+		schema.ArrayItem = js.ArrayItem{
 			Items: []js.JSONSchema{
 				elem,
 			},
@@ -167,7 +167,7 @@ func createSchemaItem(name string, idx int, typ *abi.Type) (js.JSONSchema, error
 		schema := js.JSONSchema{
 			Type:  js.ItemTypeObject,
 			Title: name,
-			ObjectItem: &js.ObjectItem{
+			ObjectItem: js.ObjectItem{
 				Properties: make(map[string]js.JSONSchema),
 				Required:   make([]string, 0),
 			},

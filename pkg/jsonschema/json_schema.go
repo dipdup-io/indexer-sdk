@@ -21,14 +21,14 @@ type JSONSchema struct {
 	Examples    []any  `json:"examples,omitempty"`
 	Enum        []any  `json:"enum,omitempty"`
 
-	InternalType string `json:"internal_type"`
+	InternalType string `json:"internal_type,omitempty"`
 	Index        int    `json:"index,omitempty"`
 
-	Type        ItemType `json:"type"`
-	*StringItem `json:",omitempty"`
-	*NumberItem `json:",omitempty"`
-	*ObjectItem `json:",omitempty"`
-	*ArrayItem  `json:",omitempty"`
+	Type ItemType `json:"type"`
+	StringItem
+	NumberItem
+	ObjectItem
+	ArrayItem
 }
 
 // ItemType -
@@ -109,5 +109,5 @@ type ArrayItem struct {
 	MaxContains int64        `json:"maxContains,omitempty"`
 	MinItems    int64        `json:"minItems,omitempty"`
 	MaxItems    int64        `json:"maxItems,omitempty"`
-	UniqueItems bool         `json:"uniqueItems"`
+	UniqueItems bool         `json:"uniqueItems,omitempty"`
 }
