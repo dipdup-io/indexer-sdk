@@ -11,7 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	gogrpc "google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -35,14 +34,22 @@ func (client *Client) Name() string {
 }
 
 // Connect - connects to server
-func (client *Client) Connect(ctx context.Context) error {
-	conn, err := gogrpc.Dial(
-		client.serverAddress,
-		gogrpc.WithTransportCredentials(insecure.NewCredentials()),
+func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error {
+	dialOpts := []gogrpc.DialOption{
 		gogrpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:    20 * time.Second,
 			Timeout: 10 * time.Second,
 		}),
+	}
+	connectOpts := newConnectOptions()
+	for i := range opts {
+		opts[i](&connectOpts)
+	}
+	dialOpts = append(dialOpts, gogrpc.WithTransportCredentials(connectOpts.creds))
+
+	conn, err := gogrpc.Dial(
+		client.serverAddress,
+		dialOpts...,
 	)
 	if err != nil {
 		return errors.Wrap(err, "dial connection")
@@ -53,15 +60,23 @@ func (client *Client) Connect(ctx context.Context) error {
 }
 
 // WaitConnect - trying to connect to server
-func (client *Client) WaitConnect(ctx context.Context) error {
-	conn, err := gogrpc.Dial(
-		client.serverAddress,
+func (client *Client) WaitConnect(ctx context.Context, opts ...ConnectOption) error {
+	dialOpts := []gogrpc.DialOption{
 		gogrpc.WithBlock(),
-		gogrpc.WithTransportCredentials(insecure.NewCredentials()),
 		gogrpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:    20 * time.Second,
 			Timeout: 10 * time.Second,
 		}),
+	}
+	connectOpts := newConnectOptions()
+	for i := range opts {
+		opts[i](&connectOpts)
+	}
+	dialOpts = append(dialOpts, gogrpc.WithTransportCredentials(connectOpts.creds))
+
+	conn, err := gogrpc.Dial(
+		client.serverAddress,
+		dialOpts...,
 	)
 	if err != nil {
 		return errors.Wrap(err, "dial connection")
