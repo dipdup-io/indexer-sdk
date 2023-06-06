@@ -67,6 +67,7 @@ func (server *Server) SubscribeOnTime(req *pb.Request, stream pb.TimeService_Sub
 		server.subscriptions,
 		NewTimeSubscription(),
 		nil,
+		nil,
 	)
 }
 

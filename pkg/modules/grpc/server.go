@@ -97,7 +97,7 @@ type ServerStream[T any] interface {
 var subscriptionsCounter = new(atomic.Uint64)
 
 // DefaultSubscribeOn - default subscribe server handler
-func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P], handler func(id uint64) error) error {
+func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Subscriptions[T, P], subscription Subscription[T, P], handler func(id uint64) error, onEndOfSync func(id uint64) error) error {
 	subscriptionID := subscriptionsCounter.Add(1)
 
 	if err := stream.SendMsg(&pb.SubscribeResponse{
@@ -108,11 +108,17 @@ func DefaultSubscribeOn[T any, P any](stream ServerStream[P], subscriptions *Sub
 
 	if handler != nil {
 		if err := handler(subscriptionID); err != nil {
-			return err
+			return errors.Wrap(err, "synchronization")
 		}
 	}
 
 	subscriptions.Add(subscriptionID, subscription)
+
+	if onEndOfSync != nil {
+		if err := onEndOfSync(subscriptionID); err != nil {
+			return errors.Wrap(err, "end of sync handler")
+		}
+	}
 
 loop:
 	for {
