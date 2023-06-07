@@ -9,6 +9,7 @@ import (
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 // Client -
@@ -16,6 +17,7 @@ type Client struct {
 	*grpc.Client
 
 	output *modules.Output
+	stream *grpc.Stream[*pb.Response]
 
 	client pb.TimeServiceClient
 	wg     *sync.WaitGroup
@@ -33,6 +35,9 @@ func NewClient(server string) *Client {
 // Start -
 func (client *Client) Start(ctx context.Context) {
 	client.client = pb.NewTimeServiceClient(client.Connection())
+
+	client.wg.Add(1)
+	go client.reconnect(ctx)
 }
 
 // SubscribeOnTime -
@@ -41,17 +46,47 @@ func (client *Client) SubscribeOnTime(ctx context.Context) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+	client.stream = grpc.NewStream[*pb.Response](stream)
 
-	return grpc.Subscribe[*pb.Response](
-		stream,
-		client.handleTime,
-		client.wg,
-	)
+	client.wg.Add(1)
+	go client.handleTime(ctx)
+
+	return client.stream.Subscribe(ctx)
 }
 
-func (client *Client) handleTime(ctx context.Context, data *pb.Response, id uint64) error {
-	client.output.Push(data)
-	return nil
+func (client *Client) reconnect(ctx context.Context) {
+	defer client.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-client.Reconnect():
+			if client.stream != nil {
+				if err := client.stream.Close(); err != nil {
+					log.Err(err).Msg("closing stream")
+					continue
+				}
+			}
+
+			if _, err := client.SubscribeOnTime(ctx); err != nil {
+				log.Err(err).Msg("subscription error")
+			}
+		}
+	}
+}
+
+func (client *Client) handleTime(ctx context.Context) {
+	defer client.wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg := <-client.stream.Listen():
+			client.output.Push(msg)
+		}
+	}
 }
 
 // UnsubscribeFromTime -
@@ -84,5 +119,20 @@ func (client *Client) AttachTo(name string, input *modules.Input) error {
 		return err
 	}
 	output.Attach(input)
+	return nil
+}
+
+// Close -
+func (client *Client) Close() error {
+	client.wg.Wait()
+
+	if client.stream != nil {
+		if err := client.stream.Close(); err != nil {
+			return err
+		}
+	}
+	if err := client.Client.Close(); err != nil {
+		return err
+	}
 	return nil
 }
