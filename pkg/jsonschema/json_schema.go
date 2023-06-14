@@ -24,6 +24,11 @@ type JSONSchema struct {
 	InternalType string `json:"internal_type,omitempty"`
 	Index        int    `json:"index,omitempty"`
 
+	OneOf []*JSONSchema `json:"oneOf,omitempty"`
+	AllOf []*JSONSchema `json:"allOf,omitempty"`
+	AnyOf []*JSONSchema `json:"anyOf,omitempty"`
+	Not   *JSONSchema   `json:"not,omitempty"`
+
 	Type ItemType `json:"type"`
 	StringItem
 	NumberItem
