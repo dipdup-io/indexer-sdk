@@ -14,7 +14,7 @@ type Person struct {
 }
 
 // NewPerson -
-func NewPerson(db *database.PgGo) *Person {
+func NewPerson(db *database.Bun) *Person {
 	return &Person{
 		Table: postgres.NewTable[storage.Person](db),
 	}
@@ -23,6 +23,6 @@ func NewPerson(db *database.PgGo) *Person {
 // GetByName-
 func (p *Person) GetByName(ctx context.Context, name string) (storage.Person, error) {
 	var person storage.Person
-	err := p.DB().ModelContext(ctx, &person).Where("name = ?", name).First()
+	err := p.DB().NewSelect().Model(&person).Where("name = ?", name).Scan(ctx)
 	return person, err
 }

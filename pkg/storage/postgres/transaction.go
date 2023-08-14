@@ -2,10 +2,11 @@ package postgres
 
 import (
 	"context"
-	"io"
 
-	"github.com/go-pg/pg/v10"
+	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/uptrace/bun"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 // Transaction -
 type Transaction struct {
-	tx *pg.Tx
+	tx *bun.Tx
 }
 
 // Flush -
@@ -22,7 +23,7 @@ func (t *Transaction) Flush(ctx context.Context) error {
 	if t.tx == nil {
 		return errNilTx
 	}
-	if err := t.tx.CommitContext(ctx); err != nil {
+	if err := t.tx.Commit(); err != nil {
 		return err
 	}
 
@@ -35,7 +36,7 @@ func (t *Transaction) Add(ctx context.Context, model any) error {
 		return errNilTx
 	}
 
-	_, err := t.tx.ModelContext(ctx, model).Returning("id").Insert()
+	_, err := t.tx.NewInsert().Model(model).Returning("id").Exec(ctx)
 	return err
 }
 
@@ -44,19 +45,11 @@ func (t *Transaction) Rollback(ctx context.Context) error {
 	if t.tx == nil {
 		return errNilTx
 	}
-	return t.tx.RollbackContext(ctx)
+	return t.tx.Rollback()
 }
 
 // Close -
 func (t *Transaction) Close(ctx context.Context) error {
-	if t.tx == nil {
-		return errNilTx
-	}
-
-	if err := t.tx.CloseContext(ctx); err != nil {
-		return err
-	}
-
 	t.tx = nil
 	return nil
 }
@@ -67,7 +60,7 @@ func (t *Transaction) Update(ctx context.Context, model any) error {
 		return errNilTx
 	}
 
-	_, err := t.tx.ModelContext(ctx, model).WherePK().Update()
+	_, err := t.tx.NewUpdate().Model(model).WherePK().Exec(ctx)
 	return err
 }
 
@@ -81,7 +74,7 @@ func (t *Transaction) BulkSave(ctx context.Context, models []any) error {
 		return nil
 	}
 
-	_, err := t.tx.ModelContext(ctx, &models).Returning("id").Insert()
+	_, err := t.tx.NewInsert().Model(&models).Returning("id").Exec(ctx)
 	return err
 }
 
@@ -95,24 +88,46 @@ func (t *Transaction) HandleError(ctx context.Context, err error) error {
 }
 
 // Exec - executes query and returns the number of affected rows
-func (t *Transaction) Exec(ctx context.Context, query any, params ...any) (int, error) {
+func (t *Transaction) Exec(ctx context.Context, query string, params ...any) (int64, error) {
 	if t.tx == nil {
 		return 0, errNilTx
 	}
 
-	result, err := t.tx.ExecContext(ctx, query, params...)
+	result, err := t.tx.NewRaw(query, params...).Exec(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return result.RowsAffected(), nil
+	return result.RowsAffected()
 }
 
 // CopyFrom -
-func (t *Transaction) CopyFrom(r io.Reader, query string, args ...any) error {
+func (t *Transaction) CopyFrom(ctx context.Context, tableName string, data []storage.Copiable) error {
+	if len(data) == 0 {
+		return nil
+	}
 	if t.tx == nil {
 		return errNilTx
 	}
 
-	_, err := t.tx.CopyFrom(r, query, args...)
-	return err
+	stmt, err := t.tx.PrepareContext(ctx, pq.CopyIn(tableName, data[0].Columns()...))
+	if err != nil {
+		return err
+	}
+
+	for i := range data {
+		if _, err := stmt.ExecContext(ctx, data[i].Flat()...); err != nil {
+			return err
+		}
+	}
+
+	if _, err := stmt.ExecContext(ctx); err != nil {
+		return err
+	}
+
+	return stmt.Close()
+}
+
+// Tx - returns bun.Tx pointer for custom queries
+func (t *Transaction) Tx() *bun.Tx {
+	return t.tx
 }

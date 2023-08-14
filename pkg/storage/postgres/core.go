@@ -9,11 +9,11 @@ import (
 )
 
 // Init - type of initialization function which called after creating connection to database. For example, can be used for indexes creation.
-type Init func(ctx context.Context, conn *database.PgGo) error
+type Init func(ctx context.Context, conn *database.Bun) error
 
 // Create - creates storage connection entity
 func Create(ctx context.Context, cfg config.Database, init Init) (*Storage, error) {
-	conn := database.NewPgGo()
+	conn := database.NewBun()
 
 	connectCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()

@@ -2,12 +2,13 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/dipdup-net/go-lib/config"
 	"github.com/dipdup-net/go-lib/database"
 	models "github.com/dipdup-net/indexer-sdk/examples/storage/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
-	"github.com/go-pg/pg/v10"
+	"github.com/uptrace/bun"
 )
 
 // Storage -
@@ -30,10 +31,10 @@ func Create(ctx context.Context, cfg config.Database) (*Storage, error) {
 	}, nil
 }
 
-func initDatabase(ctx context.Context, conn *database.PgGo) error {
+func initDatabase(ctx context.Context, conn *database.Bun) error {
 	// here you can create schemas, user grants or indexes
 
-	return conn.DB().RunInTransaction(ctx, func(tx *pg.Tx) error {
+	return conn.DB().RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		_, err := tx.ExecContext(ctx, `CREATE INDEX IF NOT EXISTS persons_name ON name (name)`)
 		return err
 	})

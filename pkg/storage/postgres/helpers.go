@@ -2,14 +2,13 @@ package postgres
 
 import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/go-pg/pg/v10"
-	"github.com/go-pg/pg/v10/orm"
+	"github.com/uptrace/bun"
 )
 
 // Pagination - adds limit, offset and sort to query. Query being like this:
 //
 //	query.Limit(limit).Offset(offset).Order("id ?", order)
-func Pagination(query *orm.Query, limit, offset uint64, order storage.SortOrder) *orm.Query {
+func Pagination(query *bun.SelectQuery, limit, offset uint64, order storage.SortOrder) *bun.SelectQuery {
 	if limit == 0 {
 		limit = 10
 	}
@@ -30,9 +29,9 @@ func Pagination(query *orm.Query, limit, offset uint64, order storage.SortOrder)
 // CursorPagination - adds limit, id where clause and sort to query. Query being like this:
 //
 //	query.Where("id > ?", id).Limit(limit).Order("id ?", order)
-func CursorPagination(query *orm.Query, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) *orm.Query {
+func CursorPagination(query *bun.SelectQuery, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) *bun.SelectQuery {
 	if id > 0 {
-		query.Where("id ? ?", pg.Safe(cmp.String()), id)
+		query.Where("id ? ?", bun.Safe(cmp.String()), id)
 	}
 
 	if limit == 0 {
@@ -57,12 +56,12 @@ func CursorPagination(query *orm.Query, id, limit uint64, order storage.SortOrde
 //	WHERE field IN (1,2,3)
 //
 // If length of array equals 0 condition skips.
-func In[M any](query *orm.Query, field string, arr []M) *orm.Query {
+func In[M any](query *bun.SelectQuery, field string, arr []M) *bun.SelectQuery {
 	if len(arr) == 0 {
 		return query
 	}
 
-	query.Where("? IN (?)", pg.Ident(field), pg.In(arr))
+	query.Where("? IN (?)", bun.Ident(field), bun.In(arr))
 
 	return query
 }
@@ -72,12 +71,12 @@ func In[M any](query *orm.Query, field string, arr []M) *orm.Query {
 //	WHERE field = Any (1,2,3)
 //
 // If length of array equals 0 condition skips.
-func Any[M any](query *orm.Query, field string, arr []M) *orm.Query {
+func Any[M any](query *bun.SelectQuery, field string, arr []M) *bun.SelectQuery {
 	if len(arr) == 0 {
 		return query
 	}
 
-	query.Where("? = ANY(?)", pg.Ident(field), pg.In(arr))
+	query.Where("? = ANY(?)", bun.Ident(field), bun.In(arr))
 
 	return query
 }
