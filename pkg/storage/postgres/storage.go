@@ -9,7 +9,7 @@ import (
 type Storage struct {
 	Transactable storage.Transactable
 
-	db *database.PgGo
+	db *database.Bun
 }
 
 // Close - closes storage
@@ -18,6 +18,6 @@ func (s *Storage) Close() error {
 }
 
 // Connection - returns connection structure
-func (s *Storage) Connection() *database.PgGo {
+func (s *Storage) Connection() *database.Bun {
 	return s.db
 }

@@ -19,3 +19,6 @@ generate:
 		-c uniswap \
 		-a 0xb78d5b29d50d0bb1ec8f9143bc64de0f4d1225df \
 		-p github.com/dipdup-io/uniswap
+
+test:
+	go test ./...

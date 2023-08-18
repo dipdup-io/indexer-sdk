@@ -2,7 +2,8 @@ package storage
 
 import (
 	"context"
-	"io"
+
+	"github.com/uptrace/bun"
 )
 
 // SortOrder - asc or desc
@@ -72,11 +73,18 @@ type Transaction interface {
 	BulkSave(ctx context.Context, models []any) error
 	Close(ctx context.Context) error
 	HandleError(ctx context.Context, err error) error
-	Exec(ctx context.Context, query any, params ...any) (int, error)
-	CopyFrom(r io.Reader, query string, args ...any) error
+	Exec(ctx context.Context, query string, params ...any) (int64, error)
+	CopyFrom(ctx context.Context, tableName string, data []Copiable) error
+	Tx() *bun.Tx
 }
 
 // Model - general data type interface
 type Model interface {
 	TableName() string
+}
+
+// Copiable -
+type Copiable interface {
+	Columns() []string
+	Flat() []any
 }
