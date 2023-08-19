@@ -13,6 +13,7 @@ import (
 	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -65,6 +66,7 @@ func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error 
 		},
 	))
 	dialOpts = append(dialOpts, gogrpc.WithUserAgent(connectOpts.userAgent))
+	dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
 
 	if connectOpts.wait {
 		dialOpts = append(dialOpts, gogrpc.WithBlock())

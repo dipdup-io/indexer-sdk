@@ -4,16 +4,23 @@ import (
 	"context"
 	"io"
 	"net"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/ratelimit"
 	"google.golang.org/grpc"
 	gogrpc "google.golang.org/grpc"
+	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -21,7 +28,9 @@ import (
 type Server struct {
 	bind string
 
-	server *gogrpc.Server
+	server        *gogrpc.Server
+	metricsServer *http.Server
+	srvMetrics    *grpcprom.ServerMetrics
 
 	wg *sync.WaitGroup
 }
@@ -35,7 +44,8 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 		bind: cfg.Bind,
 		wg:   new(sync.WaitGroup),
 	}
-	module.server = gogrpc.NewServer(
+
+	opts := []gogrpc.ServerOption{
 		gogrpc.KeepaliveParams(
 			keepalive.ServerParameters{
 				Time:    20 * time.Second,
@@ -47,8 +57,59 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 				MinTime:             10 * time.Second,
 				PermitWithoutStream: true,
 			},
-		))
+		),
+	}
+
+	streamInterceptors := make([]gogrpc.StreamServerInterceptor, 0)
+	unaryInterceptors := make([]gogrpc.UnaryServerInterceptor, 0)
+
+	if cfg.Log {
+		streamInterceptors = append(streamInterceptors, logging.StreamServerInterceptor(logCalls()))
+		unaryInterceptors = append(unaryInterceptors, logging.UnaryServerInterceptor(logCalls()))
+
+	}
+
+	if cfg.Metrics {
+		module.metricsServer, module.srvMetrics = newMetricsServer("127.0.0.1:6789")
+		streamInterceptors = append(streamInterceptors, module.srvMetrics.StreamServerInterceptor())
+		unaryInterceptors = append(unaryInterceptors, module.srvMetrics.UnaryServerInterceptor())
+	}
+
+	if cfg.RPS > 0 {
+		limiter := newSimpleLimiter(cfg.RPS)
+		streamInterceptors = append(streamInterceptors, ratelimit.StreamServerInterceptor(limiter))
+		unaryInterceptors = append(unaryInterceptors, ratelimit.UnaryServerInterceptor(limiter))
+	}
+
+	if len(streamInterceptors) > 0 {
+		opts = append(opts,
+			gogrpc.ChainStreamInterceptor(streamInterceptors...),
+		)
+	}
+	if len(unaryInterceptors) > 0 {
+		opts = append(opts,
+			gogrpc.ChainUnaryInterceptor(unaryInterceptors...),
+		)
+	}
+
+	module.server = gogrpc.NewServer(opts...)
 	return module, nil
+}
+
+func newMetricsServer(httpAddr string) (*http.Server, *grpcprom.ServerMetrics) {
+	httpSrv := &http.Server{Addr: httpAddr}
+	m := http.NewServeMux()
+
+	srvMetrics := grpcprom.NewServerMetrics(
+		grpcprom.WithServerHandlingTimeHistogram(
+			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
+		),
+	)
+	reg := prometheus.NewRegistry()
+	reg.MustRegister(srvMetrics)
+	m.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	httpSrv.Handler = m
+	return httpSrv, srvMetrics
 }
 
 // Name -
@@ -60,6 +121,9 @@ func (*Server) Name() string {
 func (module *Server) Start(ctx context.Context) {
 	module.wg.Add(1)
 	go module.grpc(ctx)
+
+	module.wg.Add(1)
+	go module.startMetricsServer(ctx)
 }
 
 func (module *Server) grpc(ctx context.Context) {
@@ -77,9 +141,30 @@ func (module *Server) grpc(ctx context.Context) {
 	}
 }
 
+func (module *Server) startMetricsServer(ctx context.Context) {
+	defer module.wg.Done()
+
+	if module.metricsServer == nil {
+		return
+	}
+
+	if err := module.metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Err(err).Msg("failed to serve metrics")
+		return
+	}
+	log.Info().Msg("metrics server shutdown")
+}
+
 // Close - closes server module
 func (module *Server) Close() error {
-	module.server.Stop()
+	if module.metricsServer != nil {
+		if err := module.metricsServer.Shutdown(context.Background()); err != nil {
+			return err
+		}
+	}
+	module.server.GracefulStop()
+
+	module.wg.Wait()
 	return nil
 }
 
