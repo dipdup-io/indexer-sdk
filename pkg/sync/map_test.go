@@ -154,6 +154,19 @@ func TestMap_Clear(t *testing.T) {
 	}
 
 	if length != 0 {
-		t.Fatalf("Unexpected map size, got %v want %v", length, 0)
+		t.Fatalf("unexpected map size, got %v want %v", length, 0)
+	}
+}
+
+func TestMap_Len(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"len", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	length := m.Len()
+
+	if length != 3 {
+		t.Fatalf("unexpected map size, got %v want %v", length, 3)
 	}
 }

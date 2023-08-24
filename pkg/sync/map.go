@@ -61,3 +61,9 @@ func (m Map[K, V]) Clear() {
 	}
 	m.mx.Unlock()
 }
+
+func (m Map[K, V]) Len() int {
+	m.mx.RLock()
+	defer m.mx.RUnlock()
+	return len(m.m)
+}
