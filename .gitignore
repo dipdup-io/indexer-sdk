@@ -18,3 +18,6 @@
 
 cmd/example
 cmd/dipdup-gen/*.json
+
+# IDE and other 3th party tools
+.idea

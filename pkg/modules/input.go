@@ -1,15 +1,5 @@
 package modules
 
-import (
-	"errors"
-)
-
-// errors
-var (
-	ErrUnknownInput  = errors.New("unknown input")
-	ErrUnknownOutput = errors.New("unknown output")
-)
-
 // Input -
 type Input struct {
 	data chan any

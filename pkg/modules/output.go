@@ -53,9 +53,9 @@ func (output *Output) Name() string {
 
 // Connect -
 func Connect(outputModule, inputModule Module, outputName, inputName string) error {
-	everySecond, err := inputModule.Input(inputName)
+	input, err := inputModule.Input(inputName)
 	if err != nil {
 		log.Panic(err)
 	}
-	return outputModule.AttachTo(outputName, everySecond)
+	return outputModule.AttachTo(outputName, input)
 }
