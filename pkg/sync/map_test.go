@@ -1,6 +1,11 @@
 package sync
 
-import "testing"
+import (
+	"math/rand"
+	"runtime"
+	"sync"
+	"testing"
+)
 
 func TestMap_Get(t *testing.T) {
 	m := NewMap[int, string]()
@@ -59,12 +64,73 @@ func TestMap_Range(t *testing.T) {
 	}
 
 	if err := m.Range(handler); err != nil {
-		t.Fatalf("error occured in range %+v", err)
+		t.Fatalf("error occured in Range %+v", err)
 	}
 
 	for k, v := range checkData {
 		if !v.checked {
-			t.Fatalf("key %d was not applied in range", k)
+			t.Fatalf("key %d was not applied in Range", k)
+		}
+	}
+}
+
+func TestMap_ConcurrentRange(t *testing.T) {
+	const mapSize = 1 << 10
+
+	m := NewMap[int64, int64]()
+	for n := int64(1); n <= mapSize; n++ {
+		m.Set(n, n)
+	}
+
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	defer func() {
+		close(done)
+		wg.Wait()
+	}()
+
+	for g := int64(runtime.GOMAXPROCS(0)); g > 0; g-- {
+		r := rand.New(rand.NewSource(g))
+		wg.Add(1)
+		go func(g int64) {
+			defer wg.Done()
+			for i := int64(0); ; i++ {
+				select {
+				case <-done:
+					return
+				default:
+				}
+				for n := int64(1); n < mapSize; n++ {
+					if r.Int63n(mapSize) == 0 {
+						m.Set(n, n*i*g)
+					} else {
+						m.Get(n)
+					}
+				}
+			}
+		}(g)
+	}
+
+	for n := 16; n > 0; n-- {
+		seen := make(map[int64]bool, mapSize)
+
+		err := m.Range(func(k, v int64) (error, bool) {
+			if v%k != 0 {
+				t.Fatalf("while Setting multiples of %v, Range saw value %v", k, v)
+			}
+			if seen[k] {
+				t.Fatalf("Range visited key %v twice", k)
+			}
+			seen[k] = true
+			return nil, false
+		})
+
+		if len(seen) != mapSize {
+			t.Fatalf("Range visited %v elements of %v-element Map", len(seen), mapSize)
+		}
+
+		if err != nil {
+			t.Fatalf("error occured in Range %+v", err)
 		}
 	}
 }
