@@ -134,3 +134,26 @@ func TestMap_ConcurrentRange(t *testing.T) {
 		}
 	}
 }
+
+func TestMap_Clear(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"clear", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	m.Clear()
+
+	length := 0
+	err := m.Range(func(key int, value string) (error, bool) {
+		length++
+		return nil, false
+	})
+
+	if err != nil {
+		t.Fatalf("error occured in checking length of Range %+v", err)
+	}
+
+	if length != 0 {
+		t.Fatalf("Unexpected map size, got %v want %v", length, 0)
+	}
+}

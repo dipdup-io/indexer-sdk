@@ -33,6 +33,7 @@ func (m Map[K, V]) Set(key K, value V) {
 	m.mx.Unlock()
 }
 
+// Range (WARN) does not support nested ranges with Delete in them.
 func (m Map[K, V]) Range(handler func(key K, value V) (error, bool)) error {
 	if handler == nil {
 		return nil
@@ -50,4 +51,13 @@ func (m Map[K, V]) Range(handler func(key K, value V) (error, bool)) error {
 		}
 	}
 	return nil
+}
+
+func (m Map[K, V]) Clear() {
+	m.mx.Lock()
+	// clear(m.m) TODO: rewrite on go 1.21
+	for k := range m.m {
+		delete(m.m, k)
+	}
+	m.mx.Unlock()
 }
