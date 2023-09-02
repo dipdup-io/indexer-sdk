@@ -55,7 +55,11 @@ func main() {
 	// creating custom module which receives notification from client and log it to console.
 	module := NewCustomModule()
 
-	if err := modules.Connect(client, module, "time", "input"); err != nil {
+	if err := modules.Register(server, client, module); err != nil {
+		log.Panic().Err(err).Msg("register modules")
+	}
+
+	if err := modules.Connect(client.Name(), module.Name(), "Output", "Input"); err != nil {
 		log.Panic().Err(err).Msg("module connection error")
 		return
 	}

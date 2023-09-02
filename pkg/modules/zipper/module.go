@@ -4,16 +4,16 @@ import (
 	"context"
 	"sync"
 
+	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/pkg/errors"
 )
 
 // Module - zip module
 type Module[Key comparable] struct {
-	firstInput  *modules.Input
-	secondInput *modules.Input
+	First  chan Zippable[Key]
+	Second chan Zippable[Key]
 
-	output *modules.Output
+	Output *modules.Output[*Result[Key]]
 
 	firstStream  map[Key]Zippable[Key]
 	secondStream map[Key]Zippable[Key]
@@ -21,20 +21,20 @@ type Module[Key comparable] struct {
 	zipFunc ZipFunction[Key]
 
 	mx *sync.RWMutex
-	wg *sync.WaitGroup
+	g  workerpool.Group
 }
 
 // NewModule - creates zip module
 func NewModule[Key comparable]() *Module[Key] {
 	return &Module[Key]{
-		firstInput:   modules.NewInput(FirstInputName),
-		secondInput:  modules.NewInput(SecondInputName),
-		output:       modules.NewOutput(OutputName),
+		First:        make(chan Zippable[Key], 1024),
+		Second:       make(chan Zippable[Key], 1024),
+		Output:       modules.NewOutput[*Result[Key]](),
 		firstStream:  make(map[Key]Zippable[Key]),
 		secondStream: make(map[Key]Zippable[Key]),
 		zipFunc:      defaultZip[Key],
 		mx:           new(sync.RWMutex),
-		wg:           new(sync.WaitGroup),
+		g:            workerpool.NewGroup(),
 	}
 }
 
@@ -44,12 +44,12 @@ func NewModuleWithFunc[Key comparable](f ZipFunction[Key]) (*Module[Key], error)
 		return nil, ErrNilZipFunc
 	}
 	return &Module[Key]{
-		firstInput:  modules.NewInput(FirstInputName),
-		secondInput: modules.NewInput(SecondInputName),
-		output:      modules.NewOutput(OutputName),
-		zipFunc:     f,
-		mx:          new(sync.RWMutex),
-		wg:          new(sync.WaitGroup),
+		First:   make(chan Zippable[Key], 1024),
+		Second:  make(chan Zippable[Key], 1024),
+		Output:  modules.NewOutput[*Result[Key]](),
+		zipFunc: f,
+		mx:      new(sync.RWMutex),
+		g:       workerpool.NewGroup(),
 	}, nil
 }
 
@@ -58,81 +58,36 @@ func (*Module[Key]) Name() string {
 	return ModuleName
 }
 
-// Input - returns input by name
-func (m *Module[Key]) Input(name string) (*modules.Input, error) {
-	switch name {
-	case FirstInputName:
-		return m.firstInput, nil
-	case SecondInputName:
-		return m.secondInput, nil
-	default:
-		return nil, errors.Wrap(modules.ErrUnknownInput, name)
-	}
-}
-
-// Output - returns output by name
-func (m *Module[Key]) Output(name string) (*modules.Output, error) {
-	if name != OutputName {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return m.output, nil
-}
-
-// AttachTo - attach input to output with name
-func (m *Module[Key]) AttachTo(name string, input *modules.Input) error {
-	output, err := m.Output(name)
-	if err != nil {
-		return err
-	}
-	output.Attach(input)
-	return nil
-}
-
 // Close - gracefully stops module
 func (m *Module[Key]) Close() error {
-	m.wg.Wait()
+	m.g.Wait()
 
-	if err := m.firstInput.Close(); err != nil {
-		return err
-	}
-	if err := m.secondInput.Close(); err != nil {
-		return err
-	}
+	close(m.First)
+	close(m.Second)
 
 	return nil
 }
 
 // Start - starts module
 func (m *Module[Key]) Start(ctx context.Context) {
-	m.wg.Add(1)
-	go m.listen(ctx)
+	m.g.GoCtx(ctx, m.listen)
 }
 
 func (m *Module[Key]) listen(ctx context.Context) {
-	defer m.wg.Done()
-
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case msg, ok := <-m.firstInput.Listen():
+		case msg, ok := <-m.First:
 			if !ok {
 				return
 			}
-			value, ok := msg.(Zippable[Key])
-			if !ok {
-				continue
-			}
-			m.zip(value, m.firstStream, m.secondStream)
-		case msg, ok := <-m.secondInput.Listen():
+			m.zip(msg, m.firstStream, m.secondStream)
+		case msg, ok := <-m.Second:
 			if !ok {
 				return
 			}
-			value, ok := msg.(Zippable[Key])
-			if !ok {
-				continue
-			}
-			m.zip(value, m.secondStream, m.firstStream)
+			m.zip(msg, m.secondStream, m.firstStream)
 		}
 	}
 }
@@ -142,7 +97,7 @@ func (m *Module[Key]) zip(value Zippable[Key], first, second map[Key]Zippable[Ke
 		first[value.Key()] = value
 	} else {
 		if result := m.zipFunc(value, data); result != nil {
-			m.output.Push(result)
+			m.Output.Push(result)
 			delete(second, value.Key())
 		}
 	}

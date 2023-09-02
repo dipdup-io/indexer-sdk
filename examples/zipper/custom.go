@@ -2,59 +2,38 @@ package main
 
 import (
 	"context"
-	"sync"
 	"time"
 
+	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/pkg/errors"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules/zipper"
 )
 
 // CustomModule -
 type CustomModule struct {
+	Output *modules.Output[zipper.Zippable[int]]
+
 	additional int
 	startValue int
 	name       string
-	output     *modules.Output
-	wg         *sync.WaitGroup
+	g          workerpool.Group
 }
 
 // NewCustomModule -
 func NewCustomModule(startValue, additional int, name string) *CustomModule {
 	return &CustomModule{
+		Output: modules.NewOutput[zipper.Zippable[int]](),
+
 		additional: additional,
 		startValue: startValue,
 		name:       name,
-		output:     modules.NewOutput("output"),
-		wg:         new(sync.WaitGroup),
+		g:          workerpool.NewGroup(),
 	}
-}
-
-// Input -
-func (m *CustomModule) Input(name string) (*modules.Input, error) {
-	return nil, errors.Wrap(modules.ErrUnknownInput, name)
-}
-
-// Output -
-func (m *CustomModule) Output(name string) (*modules.Output, error) {
-	if name != "output" {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return m.output, nil
-}
-
-// AttachTo -
-func (m *CustomModule) AttachTo(name string, input *modules.Input) error {
-	output, err := m.Output(name)
-	if err != nil {
-		return err
-	}
-	output.Attach(input)
-	return nil
 }
 
 // Close -
 func (m *CustomModule) Close() error {
-	m.wg.Wait()
+	m.g.Wait()
 	return nil
 }
 
@@ -65,13 +44,10 @@ func (m *CustomModule) Name() string {
 
 // Start -
 func (m *CustomModule) Start(ctx context.Context) {
-	m.wg.Add(1)
-	go m.generate(ctx)
+	m.g.GoCtx(ctx, m.generate)
 }
 
 func (m *CustomModule) generate(ctx context.Context) {
-	defer m.wg.Done()
-
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
@@ -82,7 +58,7 @@ func (m *CustomModule) generate(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			m.output.Push(data)
+			m.Output.Push(data)
 			data.key += m.additional
 		}
 	}

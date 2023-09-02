@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"sync"
 	"time"
 
+	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/examples/grpc/pb"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc"
 	generalPB "github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
@@ -17,7 +17,7 @@ type Server struct {
 
 	subscriptions *grpc.Subscriptions[time.Time, *pb.Response]
 
-	wg *sync.WaitGroup
+	g workerpool.Group
 }
 
 // NewServer -
@@ -30,7 +30,7 @@ func NewServer(cfg *grpc.ServerConfig) (*Server, error) {
 	return &Server{
 		Server:        server,
 		subscriptions: grpc.NewSubscriptions[time.Time, *pb.Response](),
-		wg:            new(sync.WaitGroup),
+		g:             workerpool.NewGroup(),
 	}, nil
 }
 
@@ -40,13 +40,10 @@ func (server *Server) Start(ctx context.Context) {
 
 	server.Server.Start(ctx)
 
-	server.wg.Add(1)
-	go server.listen(ctx)
+	server.g.GoCtx(ctx, server.listen)
 }
 
 func (server *Server) listen(ctx context.Context) {
-	defer server.wg.Done()
-
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
 

@@ -4,12 +4,10 @@ import "github.com/pkg/errors"
 
 // predefined names
 const (
-	FirstInputName  = "first"
-	SecondInputName = "second"
-
-	OutputName = "output"
-
-	ModuleName = "zipper"
+	FirstInputName  = "First"
+	SecondInputName = "Second"
+	OutputName      = "Output"
+	ModuleName      = "zipper"
 )
 
 // Zippable - interface of data which can be zipped

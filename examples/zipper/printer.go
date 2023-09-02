@@ -1,10 +1,11 @@
-package printer
+package main
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/dipdup-io/workerpool"
+	"github.com/dipdup-net/indexer-sdk/pkg/modules/zipper"
 	"github.com/rs/zerolog/log"
 )
 
@@ -14,28 +15,28 @@ const (
 	InputName  = "Input"
 )
 
-// Module - the structure which is responsible for print received messages
-type Module struct {
-	Input chan string
+// Printer - the structure which is responsible for print received messages
+type Printer struct {
+	Input chan *zipper.Result[int]
 
 	g workerpool.Group
 }
 
-// NewModule - constructor of printer structure
-func NewModule() *Module {
-	return &Module{
-		Input: make(chan string, 16),
+// NewPrinter - constructor of printer structure
+func NewPrinter() *Printer {
+	return &Printer{
+		Input: make(chan *zipper.Result[int], 16),
 		g:     workerpool.NewGroup(),
 	}
 }
 
 // Name -
-func (printer *Module) Name() string {
+func (printer *Printer) Name() string {
 	return ModuleName
 }
 
 // Close - gracefully stops module
-func (printer *Module) Close() error {
+func (printer *Printer) Close() error {
 	printer.g.Wait()
 
 	close(printer.Input)
@@ -43,11 +44,11 @@ func (printer *Module) Close() error {
 }
 
 // Start - starts module
-func (printer *Module) Start(ctx context.Context) {
+func (printer *Printer) Start(ctx context.Context) {
 	printer.g.GoCtx(ctx, printer.listen)
 }
 
-func (printer *Module) listen(ctx context.Context) {
+func (printer *Printer) listen(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():

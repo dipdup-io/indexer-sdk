@@ -174,32 +174,7 @@ func (client *Client) UnsubscribeFromTime(ctx context.Context, id uint64) error 
 
 `handleTime` is a hadler which called on receiving new event from server.
 
-Also you need implement `Module` interface. It's described [here](/pkg/modules/). For example:
-
-```go
-// Input -
-func (client *Client) Input(name string) (*modules.Input, error) {
-	return nil, errors.Wrap(modules.ErrUnknownInput, name)
-}
-
-// Output -
-func (client *Client) Output(name string) (*modules.Output, error) {
-	if name != "time" {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return client.output, nil
-}
-
-// AttachTo -
-func (client *Client) AttachTo(name string, input *modules.Input) error {
-	output, err := client.Output(name)
-	if err != nil {
-		return err
-	}
-	output.Attach(input)
-	return nil
-}
-```
+Also you need register your module. 
 
 ### Inputs ans outputs
 
@@ -267,7 +242,11 @@ func main() {
 	// creating custom module which receives notification from client and log it to console.
 	module := NewCustomModule()
 
-	if err := modules.Connect(client, module, "time", "input"); err != nil {
+	if err := modules.Register(server, client, module); err != nil {
+		log.Panic().Err(err).Msg("register modules")
+	}
+
+	if err := modules.Connect(client.Name(), module.Name(), "Output", "Input"); err != nil {
 		log.Panic().Err(err).Msg("module connection error")
 		return
 	}
@@ -295,4 +274,5 @@ func main() {
 		log.Panic().Err(err).Msg("closing server error")
 	}
 }
+
 ```

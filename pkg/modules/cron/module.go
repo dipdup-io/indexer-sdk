@@ -4,15 +4,18 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 )
+
+type Message struct {
+	Job string
+}
 
 // Module - cron module
 type Module struct {
 	cron *cron.Cron
 
-	outputs map[string]*modules.Output
+	Output *modules.Output[Message]
 }
 
 // NewModule - creates cron module
@@ -24,11 +27,9 @@ func NewModule(cfg *Config) (*Module, error) {
 			)),
 			// cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)),
 		),
-		outputs: make(map[string]*modules.Output),
+		Output: modules.NewOutput[Message](),
 	}
 	for job, pattern := range cfg.Jobs {
-		module.outputs[job] = modules.NewOutput(job)
-
 		if _, err := module.cron.AddFunc(
 			pattern,
 			newHandler(module, job, pattern),
@@ -56,33 +57,10 @@ func (module *Module) Close() error {
 	return nil
 }
 
-// Output -
-func (module *Module) Output(name string) (*modules.Output, error) {
-	output, ok := module.outputs[name]
-	if !ok {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return output, nil
-}
-
-// Input -
-func (module *Module) Input(name string) (*modules.Input, error) {
-	return nil, errors.Wrap(modules.ErrUnknownInput, name)
-}
-
-// AttachTo -
-func (module *Module) AttachTo(name string, input *modules.Input) error {
-	output, err := module.Output(name)
-	if err != nil {
-		return err
-	}
-
-	output.Attach(input)
-	return nil
-}
-
 func (module *Module) notify(job, pattern string) {
-	module.outputs[job].Push(struct{}{})
+	module.Output.Push(Message{
+		Job: job,
+	})
 }
 
 func newHandler(module *Module, job, pattern string) func() {

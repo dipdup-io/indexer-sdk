@@ -25,10 +25,11 @@ func main() {
 	}
 	customModule := NewCustomModule()
 
-	if err := modules.Connect(cronModule, customModule, "every_second", "every_second"); err != nil {
+	if err := modules.Register(cronModule, customModule); err != nil {
 		log.Panic(err)
 	}
-	if err := modules.Connect(cronModule, customModule, "every_five_second", "every_five_second"); err != nil {
+
+	if err := modules.Connect(cronModule.Name(), customModule.Name(), "Output", "Messages"); err != nil {
 		log.Panic(err)
 	}
 

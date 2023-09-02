@@ -12,9 +12,6 @@ type Module interface {
 
 	Name() string
 	Start(ctx context.Context)
-	Input(name string) (*Input, error)
-	Output(name string) (*Output, error)
-	AttachTo(outputName string, input *Input) error
 }
  ``` 
 
@@ -23,34 +20,31 @@ Interface contains following methods:
  * `Start` - starts asynchronous waiting of messages in inputs and initialize module state.
  * `Close` - gracefully stops all module activities (inherited from `io.Closer` interface).
  * `Name` - returns name of module which will be used in workflow construction.
- * `Input` - returns input by its name.
- * `Output` - returns output by its name.
- * `AttachTo` - connects output with name to passed input of another module. 
+
+You have to register all usig modules with function `Register`. It applies modules array as arguments.
+
+```go
+func Register(modules ...Module) error
+```
+
+Package contains global registry of module to manage connections between them.
 
 ## Inputs and outputs
 
-All communication between modules is implemented via inputs/outputs. Input is the structure contains channel with `any` as data. It also has name which will be its identity in module's scope.
+All communication between modules is implemented via inputs/outputs. Input is the public field type of channel. All such field will be registered as input. Following exemple contains 2 inputs: `Input1` and `Input2`.
 
 ```go
-type Input struct {
-	data chan any
-	name string
+type Module struct {
+	Input1 chan int
+	Input2 chan int
 }
 ```
-It has following methods:
-
-* `Close` - closes channel of input
-* `Push` - sends message to channel
-* `Listen` - waits new message
-* `Name` - returns input name
 
 Output is the set of inputs which connected to it. When module send message to output it iterates over all connected inputs and pushes message to them. Output also has name which identifies it.
 
 ```go
 type Output struct {
-	connectedInputs []*Input
-	name            string
-
+	connectedInputs []chan T
 	mx sync.RWMutex
 }
 ```
@@ -65,10 +59,10 @@ It has following methods:
 SDK has helper function `Connect`:
 
 ```go
-func Connect(outputModule, inputModule Module, outputName, inputName string) error 
+func Connect(outputModuleName, inputModuleName, outputName, inputName string) error 
 ```
 
-The function receives `outputModule` and `inputModule`: modules which will be connected. Also it receives input and output names in that modules which will be connected.
+The function receives `inputModuleName` and `outputModuleName`: modules which will be connected. Also it receives input and output names in that modules which will be connected.
 
 ## Workflow
 
@@ -97,7 +91,3 @@ gRPC module where realized default client and server. Detailed docs can be found
 ### Cron
 
 Cron module implements cron scheduler. Detailed docs can be found [here](/pkg/modules/cron/).
-
-### Duplicator
-
-Duplicator module repeats signal from one of inputs to all outputs. Detailed docs can be found [here](/pkg/modules/duplicator/).

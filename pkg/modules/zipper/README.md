@@ -18,6 +18,11 @@ Zipper module implements interface `Module`. So you can use it like any other mo
 // create zip module
 zip := zipper.NewModule[int]()
 
+// register module
+if err := modules.Register(zip); err != nil {
+	log.Panic(err)
+}
+
 // start zip module
 zip.Start(ctx)
 
@@ -33,10 +38,10 @@ Zipper is the generic structure. Type parameter `Key` is `comparable` constraint
 
 ```go
 type Module[Key comparable] struct {
-	firstInput  *modules.Input
-	secondInput *modules.Input
+	First  chan Zippable[Key]
+	Second chan Zippable[Key]
 
-	output *modules.Output
+	Output *modules.Output[*Result[Key]]
 
 	firstStream  map[Key]Zippable[Key]
 	secondStream map[Key]Zippable[Key]
@@ -44,7 +49,7 @@ type Module[Key comparable] struct {
 	zipFunc ZipFunction[Key]
 
 	mx *sync.RWMutex
-	wg *sync.WaitGroup
+	g  workerpool.Group
 }
 ```
 
@@ -109,13 +114,13 @@ In the example zip module created with `Key` type `int`. That's why to use the m
 Package contains declared constants of inputs name:
 
 ```go
-FirstInputName  = "first"
-SecondInputName = "second"
+FirstInputName  = "First"
+SecondInputName = "Second"
 ```
 
 ## Output
 
-When module zipped data stream it sends `Result` structure to output.
+When module zipped data stream it sends `*Result` structure to output.
 
 ```go
 type Result[Type comparable] struct {
@@ -130,5 +135,5 @@ It contains key which was used to zip. Also it contains data of first and second
 Package contains declared constant of output name:
 
 ```go
-OutputName = "output"
+OutputName = "Output"
 ```

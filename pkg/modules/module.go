@@ -17,10 +17,5 @@ type Module interface {
 	io.Closer
 
 	Name() string
-
 	Start(ctx context.Context)
-
-	Input(name string) (*Input, error)
-	Output(name string) (*Output, error)
-	AttachTo(outputName string, input *Input) error
 }

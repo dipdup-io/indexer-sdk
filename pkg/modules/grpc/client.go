@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/modules/grpc/pb"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -24,7 +25,7 @@ type Client struct {
 	serverAddress string
 	reconnect     chan struct{}
 
-	wg *sync.WaitGroup
+	g workerpool.Group
 }
 
 // NewClient - constructor of client structure
@@ -32,7 +33,7 @@ func NewClient(server string) *Client {
 	return &Client{
 		serverAddress: server,
 		reconnect:     make(chan struct{}, 1),
-		wg:            new(sync.WaitGroup),
+		g:             workerpool.NewGroup(),
 	}
 }
 
@@ -86,8 +87,7 @@ func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error 
 
 // Start - starts authentication client module
 func (client *Client) Start(ctx context.Context) {
-	client.wg.Add(1)
-	go client.checkConnectionState(ctx)
+	client.g.GoCtx(ctx, client.checkConnectionState)
 }
 
 // Reconnect - returns channel with reconnection events
@@ -97,7 +97,7 @@ func (client *Client) Reconnect() <-chan struct{} {
 
 // Close - closes authentication client module
 func (client *Client) Close() error {
-	client.wg.Wait()
+	client.g.Wait()
 
 	if err := client.conn.Close(); err != nil {
 		return err
@@ -107,8 +107,6 @@ func (client *Client) Close() error {
 }
 
 func (client *Client) checkConnectionState(ctx context.Context) {
-	defer client.wg.Done()
-
 	ticker := time.NewTicker(time.Millisecond * 100)
 	defer ticker.Stop()
 
@@ -143,7 +141,7 @@ func (client *Client) Connection() *grpc.ClientConn {
 // Stream -
 type Stream[T any] struct {
 	stream grpc.ClientStream
-	data   chan *T
+	data   chan T
 
 	wg *sync.WaitGroup
 }
@@ -152,7 +150,7 @@ type Stream[T any] struct {
 func NewStream[T any](stream grpc.ClientStream) *Stream[T] {
 	return &Stream[T]{
 		stream: stream,
-		data:   make(chan *T, 1024),
+		data:   make(chan T, 1024),
 
 		wg: new(sync.WaitGroup),
 	}
@@ -172,7 +170,7 @@ func (s *Stream[T]) Subscribe(ctx context.Context) (uint64, error) {
 }
 
 // Listen - channel with received messages
-func (s *Stream[T]) Listen() <-chan *T {
+func (s *Stream[T]) Listen() <-chan T {
 	return s.data
 }
 
@@ -195,7 +193,7 @@ func (s *Stream[T]) listen(ctx context.Context, id uint64) {
 				log.Err(err).Msg("receiving subscription error")
 				return
 			default:
-				s.data <- &msg
+				s.data <- msg
 			}
 		}
 	}

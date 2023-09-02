@@ -20,6 +20,12 @@ cronModule, err := cron.NewModule(cfg.Cron)
 if err != nil {
     log.Panic(err)
 }
+
+// register module
+if err := modules.Register(cronModule, customModule); err != nil {
+    log.Panic(err)
+}
+
 // start cron module
 cronModule.Start(ctx)
 
@@ -46,35 +52,32 @@ cron:
 
 ## Output
 
-Module sends to its outputs empty struct which notifies all connected modules about scheduled event. Each job of cron module has own output with names pointed in configuration file. So if your module should execute some work on `every_second` scheduled events from example you should connect it:
+Module sends to its output struct `Message` which notifies all connected modules about scheduled event. Struct contains job name which initiated event.
+
+```go
+type Message struct {
+	Job string
+}
+```
+
+You can connect module with following code:
 
 ```go
 // with helper function
-
-if err := modules.Connect(cronModule, customModule, "every_second", "every_second"); err != nil {
-    log.Panic(err)
-}
-
-// or directly to module
-
-if err := cronModule.AttachTo("every_second", customModule.everySecond); err != nil {
+if err := modules.Connect(cronModule, customModule, "Output", "Messages"); err != nil {
     log.Panic(err)
 }
 ```
 
-Example of handling message from cron's outputs:
+Example of handling message from cron's output:
 
 ```go
-for {
-    select {
-    case <-ctx.Done():
-        return
-    case <-m.everySecond.Listen():
-        log.Info().Msg("arrived from cron module")
-    case <-m.everyFiveSecond.Listen():
-        log.Info().Msg("arrived from cron module")
-    }
-}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg := <-m.Messages:
+			log.Info().Str("job", msg.Job).Msg("arrived from cron module")
+		}
+	}
 ```
-
-`everySecond` and `everyFiveSecond` are inputs of your modules.

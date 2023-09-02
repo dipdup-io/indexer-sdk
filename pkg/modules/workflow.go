@@ -51,29 +51,29 @@ func (wf *Workflow) Get(name string) (Module, error) {
 	return module, nil
 }
 
-// Connect - connect destination nodule input to source module output
-func (wf *Workflow) Connect(srcModule, srcOutput, destModule, destInput string) error {
-	src, ok := wf.modules[srcModule]
-	if !ok {
-		return errors.Wrap(ErrUnknownModule, srcModule)
-	}
-	output, err := src.Output(srcOutput)
-	if err != nil {
-		return err
-	}
+// // Connect - connect destination nodule input to source module output
+// func (wf *Workflow) Connect(srcModule, srcOutput, destModule, destInput string) error {
+// 	src, ok := wf.modules[srcModule]
+// 	if !ok {
+// 		return errors.Wrap(ErrUnknownModule, srcModule)
+// 	}
+// 	output, err := src.Output(srcOutput)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	dest, ok := wf.modules[destModule]
-	if !ok {
-		return errors.Wrap(ErrUnknownModule, destModule)
-	}
-	input, err := dest.Input(destInput)
-	if err != nil {
-		return err
-	}
+// 	dest, ok := wf.modules[destModule]
+// 	if !ok {
+// 		return errors.Wrap(ErrUnknownModule, destModule)
+// 	}
+// 	input, err := dest.Input(destInput)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	output.Attach(input)
-	return nil
-}
+// 	output.Attach(input)
+// 	return nil
+// }
 
 // Start - starts workflow
 func (wf *Workflow) Start(ctx context.Context) {
