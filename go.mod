@@ -2,8 +2,8 @@ module github.com/dipdup-net/indexer-sdk
 
 go 1.20
 
-
 require (
+	github.com/dipdup-io/workerpool v0.0.4
 	github.com/dipdup-net/go-lib v0.3.0
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/go-testfixtures/testfixtures/v3 v3.9.0
