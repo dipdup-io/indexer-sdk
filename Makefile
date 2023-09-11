@@ -1,6 +1,9 @@
 -include .env
 export $(shell sed 's/=.*//' .env)
 
+init:
+	chmod +x init.dev.sh && ./init.dev.sh
+
 lint:
 	golangci-lint run
 
@@ -22,3 +25,5 @@ generate:
 
 test:
 	go test ./...
+
+.PHONY: init lint generate test
