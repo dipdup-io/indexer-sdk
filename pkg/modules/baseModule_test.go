@@ -89,3 +89,21 @@ func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
 	_, ok = <-input.Listen() // TODO-DISCUSS
 	assert.False(t, ok)
 }
+
+func TestBaseModule_CloseSuccessfullyCloseInputChannels(t *testing.T) {
+	//bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
+	bmDst := &BaseModule{Inputs: sync.NewMap[string, *Input]()}
+	channelName := "data"
+
+	//bmSrc.Outputs.Set(channelName, NewOutput(channelName))
+	bmDst.Inputs.Set(channelName, NewInput(channelName))
+
+	input, err := bmDst.Input(channelName)
+	assert.NoError(t, err)
+
+	err = bmDst.Close()
+	assert.NoError(t, err)
+
+	_, ok := <-input.Listen() // TODO-DISCUSS
+	assert.False(t, ok)
+}
