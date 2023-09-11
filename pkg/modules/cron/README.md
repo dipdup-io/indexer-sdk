@@ -1,12 +1,12 @@
 # Cron
 
-Cron is the module which implements a cron specific parser and notifications about scheduler events.
+Cron is the module that implements a cron specific parser and notifications about scheduler events.
 
 ## Usage
 
-Usage of cron module is described by the [example](/examples/cron/).
+The example [describes usage of cron module](/examples/cron/).
 
-To import module in your code write following line:
+To import module in your code, write the following line:
 
 ```go
 import "github.com/dipdup-net/indexer-sdk/pkg/modules/cron"
@@ -33,7 +33,9 @@ if err := cronModule.Close(); err != nil {
 
 ## Config
 
-Default yaml config of cron module contains only one field `jobs`. It's a map of job names to cron pattern. Job names is used like subscription id in inner-message communication.
+Default yaml config of cron module contains only one field `jobs`.
+It's a map of job names to a cron pattern.
+Job names are used like subscription id in inner-message communication.
 
 ```yaml
 cron:
@@ -46,7 +48,9 @@ cron:
 
 ## Output
 
-Module sends to its outputs empty struct which notifies all connected modules about scheduled event. Each job of cron module has own output with names pointed in configuration file. So if your module should execute some work on `every_second` scheduled events from example you should connect it:
+Module sends to its outputs empty struct which notifies all connected modules about scheduled event.
+Each job of cron module has its own output with names pointed in the configuration file.
+So if your module should execute some work on `every_second` scheduled events from example you should connect it:
 
 ```go
 // with helper function
@@ -62,7 +66,7 @@ if err := cronModule.AttachTo("every_second", customModule.everySecond); err != 
 }
 ```
 
-Example of handling message from cron's outputs:
+Example of a handling message from cron's outputs:
 
 ```go
 for {
