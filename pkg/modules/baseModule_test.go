@@ -91,11 +91,11 @@ func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
 }
 
 func TestBaseModule_CloseSuccessfullyCloseInputChannels(t *testing.T) {
-	//bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
+	// bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
 	bmDst := &BaseModule{Inputs: sync.NewMap[string, *Input]()}
 	channelName := "data"
 
-	//bmSrc.Outputs.Set(channelName, NewOutput(channelName))
+	// bmSrc.Outputs.Set(channelName, NewOutput(channelName))
 	bmDst.Inputs.Set(channelName, NewInput(channelName))
 
 	input, err := bmDst.Input(channelName)
