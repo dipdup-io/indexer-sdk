@@ -57,3 +57,35 @@ func TestBaseModule_NonExistingOutput(t *testing.T) {
 	assert.Errorf(t, err, "%s: %s", ErrUnknownOutput.Error(), nonExistingChannelName)
 	assert.Nil(t, output)
 }
+
+func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
+	bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
+	bmDst := &BaseModule{Inputs: sync.NewMap[string, *Input]()}
+	channelName := "data"
+
+	bmSrc.Outputs.Set(channelName, NewOutput(channelName))
+	bmDst.Inputs.Set(channelName, NewInput(channelName))
+
+	input, err := bmDst.Input(channelName)
+	assert.NoError(t, err)
+
+	err = bmSrc.AttachTo(channelName, input)
+	assert.NoError(t, err)
+
+	output, ok := bmSrc.Outputs.Get(channelName)
+	assert.True(t, ok)
+
+	output.Push("hello")
+
+	msg := <-input.Listen()
+	assert.Equal(t, "hello", msg)
+
+	err = bmSrc.Close()
+	assert.NoError(t, err)
+
+	err = bmDst.Close()
+	assert.NoError(t, err)
+
+	_, ok = <-input.Listen() // TODO-DISCUSS
+	assert.False(t, ok)
+}

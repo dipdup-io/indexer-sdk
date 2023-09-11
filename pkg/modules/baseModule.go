@@ -9,8 +9,8 @@ import (
 var _ Module = &BaseModule{}
 
 type BaseModule struct {
-	Inputs  sync.Map[string, *Input]
-	Outputs sync.Map[string, *Output]
+	Inputs  *sync.Map[string, *Input]
+	Outputs *sync.Map[string, *Output]
 }
 
 func (*BaseModule) Name() string {
@@ -19,8 +19,12 @@ func (*BaseModule) Name() string {
 
 func (*BaseModule) Start(ctx context.Context) {}
 
-func (m *BaseModule) Close() error {
-	return m.Inputs.Range(func(name string, input *Input) (error, bool) {
+func (m *BaseModule) Close() error { // TODO-DISCUSS
+	if m.Inputs == nil {
+		return nil
+	}
+
+	return m.Inputs.Range(func(name string, input *Input) (error, bool) { // TODO-DISCUSS
 		return input.Close(), false
 	})
 }
@@ -50,3 +54,33 @@ func (m *BaseModule) AttachTo(outputName string, input *Input) error {
 	output.Attach(input)
 	return nil
 }
+
+//func (m *BaseModule) AttachTo(output Module, channelName string) error {
+//	outputChannel, err := output.Output(channelName)
+//	if err != nil {
+//		return err
+//	}
+//
+//	input, e := m.Input(channelName)
+//	if e != nil {
+//		return e
+//	}
+//
+//	outputChannel.Attach(input)
+//	return nil
+//}
+
+//func (m *BaseModule) Connect(input Module, channelName string) error {
+//	inputChannel, err := input.Input(channelName)
+//	if err != nil {
+//		return err
+//	}
+//
+//	output, e := m.Output(channelName)
+//	if e != nil {
+//		return e
+//	}
+//
+//	output.Attach(inputChannel)
+//	return nil
+//}

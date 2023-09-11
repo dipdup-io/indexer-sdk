@@ -32,7 +32,7 @@ func NewPrinter() *Printer {
 }
 
 // Name -
-func (printer *Printer) Name() string {
+func (*Printer) Name() string {
 	return "printer"
 }
 
