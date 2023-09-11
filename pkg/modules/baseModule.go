@@ -55,7 +55,7 @@ func (m *BaseModule) AttachTo(outputName string, input *Input) error {
 	return nil
 }
 
-//func (m *BaseModule) AttachTo(output Module, channelName string) error {
+// func (m *BaseModule) AttachTo(output Module, channelName string) error {
 //	outputChannel, err := output.Output(channelName)
 //	if err != nil {
 //		return err
@@ -68,9 +68,9 @@ func (m *BaseModule) AttachTo(outputName string, input *Input) error {
 //
 //	outputChannel.Attach(input)
 //	return nil
-//}
+// }
 
-//func (m *BaseModule) Connect(input Module, channelName string) error {
+// func (m *BaseModule) Connect(input Module, channelName string) error {
 //	inputChannel, err := input.Input(channelName)
 //	if err != nil {
 //		return err
@@ -83,4 +83,4 @@ func (m *BaseModule) AttachTo(outputName string, input *Input) error {
 //
 //	output.Attach(inputChannel)
 //	return nil
-//}
+// }
