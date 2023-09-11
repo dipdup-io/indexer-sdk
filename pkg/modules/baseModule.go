@@ -9,24 +9,24 @@ import (
 var _ Module = &BaseModule{}
 
 type BaseModule struct {
-	inputs  sync.Map[string, *Input]
-	outputs sync.Map[string, *Output]
+	Inputs  sync.Map[string, *Input]
+	Outputs sync.Map[string, *Output]
 }
 
 func (*BaseModule) Name() string {
 	return "base_module"
 }
 
-func (*BaseModule) Start(ctx context.Context) {
-}
+func (*BaseModule) Start(ctx context.Context) {}
 
-func (*BaseModule) Close() error {
-	// TODO: close all inputs
-	return nil
+func (m *BaseModule) Close() error {
+	return m.Inputs.Range(func(name string, input *Input) (error, bool) {
+		return input.Close(), false
+	})
 }
 
 func (m *BaseModule) Input(name string) (*Input, error) {
-	input, ok := m.inputs.Get(name)
+	input, ok := m.Inputs.Get(name)
 	if !ok {
 		return nil, errors.Wrap(ErrUnknownInput, name)
 	}
@@ -34,7 +34,7 @@ func (m *BaseModule) Input(name string) (*Input, error) {
 }
 
 func (m *BaseModule) Output(name string) (*Output, error) {
-	output, ok := m.outputs.Get(name)
+	output, ok := m.Outputs.Get(name)
 	if !ok {
 		return nil, errors.Wrap(ErrUnknownOutput, name)
 	}
