@@ -18,8 +18,7 @@ var _ modules.Module = &Printer{}
 
 // NewPrinter - constructor of printer structure
 func NewPrinter() Printer {
-	p := Printer{}
-	p.Init("printer")
+	p := Printer{BaseModule: modules.New("printer")}
 	p.CreateInput(InputName)
 	return p
 }

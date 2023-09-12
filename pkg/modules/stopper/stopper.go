@@ -26,10 +26,9 @@ const (
 
 func NewModule(cancelFunc context.CancelFunc) Module {
 	m := Module{
-		BaseModule: modules.BaseModule{},
+		BaseModule: modules.New("stopper"),
 		stop:       cancelFunc,
 	}
-	m.Init("stopper")
 	m.CreateInput(InputName)
 
 	return m

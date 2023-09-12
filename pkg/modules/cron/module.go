@@ -18,6 +18,7 @@ var _ modules.Module = &Module{}
 // NewModule - creates cron module
 func NewModule(cfg *Config) (*Module, error) {
 	module := &Module{
+		BaseModule: modules.New("cron"),
 		cron: cron.New(
 			cron.WithParser(cron.NewParser(
 				cron.SecondOptional | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor,
@@ -25,8 +26,6 @@ func NewModule(cfg *Config) (*Module, error) {
 			// cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)),
 		),
 	}
-
-	module.Init("cron")
 
 	for job, pattern := range cfg.Jobs {
 		module.CreateOutput(job)

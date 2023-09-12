@@ -7,8 +7,7 @@ import (
 )
 
 func TestBaseModule_ExistingInput(t *testing.T) {
-	bm := &BaseModule{}
-	bm.Init("module")
+	bm := New("module")
 	existingChannelName := "input-channel"
 	bm.CreateInput(existingChannelName)
 
@@ -19,8 +18,7 @@ func TestBaseModule_ExistingInput(t *testing.T) {
 }
 
 func TestBaseModule_NonExistingInput(t *testing.T) {
-	bm := &BaseModule{}
-	bm.Init("module")
+	bm := New("module")
 	nonExistingChannelName := "non-existing-input-channel"
 
 	// Act
@@ -31,8 +29,7 @@ func TestBaseModule_NonExistingInput(t *testing.T) {
 }
 
 func TestBaseModule_ExistingOutput(t *testing.T) {
-	bm := &BaseModule{}
-	bm.Init("module")
+	bm := New("module")
 	existingChannelName := "output-channel"
 	bm.CreateOutput(existingChannelName)
 
@@ -43,8 +40,7 @@ func TestBaseModule_ExistingOutput(t *testing.T) {
 }
 
 func TestBaseModule_NonExistingOutput(t *testing.T) {
-	bm := &BaseModule{}
-	bm.Init("module")
+	bm := New("module")
 	nonExistingChannelName := "non-existing-output-channel"
 
 	// Act
@@ -85,8 +81,7 @@ func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
 }
 
 func TestBaseModule_ReturnsCorrectName(t *testing.T) {
-	bm := &BaseModule{}
-	bm.Init("module")
+	bm := New("module")
 
 	name := bm.Name()
 	assert.Equal(t, "module", name)

@@ -43,11 +43,10 @@ func TestStopper_CallsStopFromAnotherModule(t *testing.T) {
 	defer cancel()
 
 	stopperModule := NewModule(stopFunc)
-	workerModule := &modules.BaseModule{}
-	workerModule.Init("worker")
+	workerModule := modules.New("module")
 	workerModule.CreateOutput("stop")
 
-	err := stopperModule.AttachTo(workerModule, "stop", InputName)
+	err := stopperModule.AttachTo(&workerModule, "stop", InputName)
 	assert.NoError(t, err)
 
 	stopperModule.Start(ctx)

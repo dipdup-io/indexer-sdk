@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ Module = &BaseModule{}
+var _ Module = (*BaseModule)(nil)
 
 type BaseModule struct {
 	name    string
@@ -19,12 +19,16 @@ type BaseModule struct {
 	G       workerpool.Group
 }
 
-func (m *BaseModule) Init(name string) {
-	m.name = name
-	m.inputs = sync.NewMap[string, *Input]()
-	m.outputs = sync.NewMap[string, *Output]()
-	m.Log = log.With().Str("module", name).Logger()
-	m.G = workerpool.NewGroup()
+func New(name string) BaseModule {
+	m := BaseModule{
+		name:    name,
+		inputs:  sync.NewMap[string, *Input](),
+		outputs: sync.NewMap[string, *Output](),
+		Log:     log.With().Str("module", name).Logger(),
+		G:       workerpool.NewGroup(),
+	}
+
+	return m
 }
 
 func (m *BaseModule) Name() string {
