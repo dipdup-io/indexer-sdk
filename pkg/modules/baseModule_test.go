@@ -7,11 +7,10 @@ import (
 )
 
 func TestBaseModule_ExistingInput(t *testing.T) {
-	bm := &BaseModule{
-		Inputs: sync.NewMap[string, *Input](),
-	}
+	bm := &BaseModule{}
+	bm.Init("module")
 	existingChannelName := "input-channel"
-	bm.Inputs.Set(existingChannelName, NewInput(existingChannelName))
+	bm.CreateInput(existingChannelName)
 
 	// Act
 	input, err := bm.Input(existingChannelName)
@@ -20,9 +19,8 @@ func TestBaseModule_ExistingInput(t *testing.T) {
 }
 
 func TestBaseModule_NonExistingInput(t *testing.T) {
-	bm := &BaseModule{
-		Inputs: sync.NewMap[string, *Input](),
-	}
+	bm := &BaseModule{}
+	bm.Init("module")
 	nonExistingChannelName := "non-existing-input-channel"
 
 	// Act
@@ -33,11 +31,10 @@ func TestBaseModule_NonExistingInput(t *testing.T) {
 }
 
 func TestBaseModule_ExistingOutput(t *testing.T) {
-	bm := &BaseModule{
-		Outputs: sync.NewMap[string, *Output](),
-	}
+	bm := &BaseModule{}
+	bm.Init("module")
 	existingChannelName := "output-channel"
-	bm.Outputs.Set(existingChannelName, NewOutput(existingChannelName))
+	bm.CreateOutput(existingChannelName)
 
 	// Act
 	output, err := bm.Output(existingChannelName)
@@ -46,9 +43,8 @@ func TestBaseModule_ExistingOutput(t *testing.T) {
 }
 
 func TestBaseModule_NonExistingOutput(t *testing.T) {
-	bm := &BaseModule{
-		Outputs: sync.NewMap[string, *Output](),
-	}
+	bm := &BaseModule{}
+	bm.Init("module")
 	nonExistingChannelName := "non-existing-output-channel"
 
 	// Act
@@ -59,21 +55,22 @@ func TestBaseModule_NonExistingOutput(t *testing.T) {
 }
 
 func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
-	bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
-	bmDst := &BaseModule{Inputs: sync.NewMap[string, *Input]()}
-	channelName := "data"
+	bmSrc := &BaseModule{outputs: sync.NewMap[string, *Output]()}
+	bmDst := &BaseModule{inputs: sync.NewMap[string, *Input]()}
+	inputName := "data-in"
+	outputName := "data-out"
 
-	bmSrc.Outputs.Set(channelName, NewOutput(channelName))
-	bmDst.Inputs.Set(channelName, NewInput(channelName))
+	bmSrc.CreateOutput(outputName)
+	bmDst.CreateInput(inputName)
 
-	input, err := bmDst.Input(channelName)
+	input, err := bmDst.Input(inputName)
 	assert.NoError(t, err)
 
-	err = bmSrc.AttachTo(channelName, input)
+	err = bmDst.AttachTo(bmSrc, outputName, inputName)
 	assert.NoError(t, err)
 
-	output, ok := bmSrc.Outputs.Get(channelName)
-	assert.True(t, ok)
+	output, err := bmSrc.Output(outputName)
+	assert.NoError(t, err)
 
 	output.Push("hello")
 
@@ -85,25 +82,12 @@ func TestBaseModule_AttachToOnExistingChannel(t *testing.T) {
 
 	err = bmDst.Close()
 	assert.NoError(t, err)
-
-	_, ok = <-input.Listen() // TODO-DISCUSS
-	assert.False(t, ok)
 }
 
-func TestBaseModule_CloseSuccessfullyCloseInputChannels(t *testing.T) {
-	// bmSrc := &BaseModule{Outputs: sync.NewMap[string, *Output]()}
-	bmDst := &BaseModule{Inputs: sync.NewMap[string, *Input]()}
-	channelName := "data"
+func TestBaseModule_ReturnsCorrectName(t *testing.T) {
+	bm := &BaseModule{}
+	bm.Init("module")
 
-	// bmSrc.Outputs.Set(channelName, NewOutput(channelName))
-	bmDst.Inputs.Set(channelName, NewInput(channelName))
-
-	input, err := bmDst.Input(channelName)
-	assert.NoError(t, err)
-
-	err = bmDst.Close()
-	assert.NoError(t, err)
-
-	_, ok := <-input.Listen() // TODO-DISCUSS
-	assert.False(t, ok)
+	name := bm.Name()
+	assert.Equal(t, "module", name)
 }

@@ -1,7 +1,6 @@
 package modules
 
 import (
-	"log"
 	"sync"
 )
 
@@ -53,9 +52,5 @@ func (output *Output) Name() string {
 
 // Connect -
 func Connect(outputModule, inputModule Module, outputName, inputName string) error {
-	input, err := inputModule.Input(inputName)
-	if err != nil {
-		log.Panic(err)
-	}
-	return outputModule.AttachTo(outputName, input)
+	return inputModule.AttachTo(outputModule, outputName, inputName)
 }
