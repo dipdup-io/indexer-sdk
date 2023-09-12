@@ -97,7 +97,3 @@ gRPC module where realized default client and server. Detailed docs can be found
 ### Cron
 
 Cron module implements cron scheduler. Detailed docs can be found [here](/pkg/modules/cron/).
-
-### Duplicator
-
-Duplicator module repeats signal from one of inputs to all outputs. Detailed docs can be found [here](/pkg/modules/duplicator/).
