@@ -45,8 +45,19 @@ func (m *CustomModule) Output(name string) (*modules.Output, error) {
 }
 
 // AttachTo -
-func (m *CustomModule) AttachTo(name string, input *modules.Input) error {
-	return errors.Wrap(modules.ErrUnknownOutput, name)
+func (m *CustomModule) AttachTo(outputModule modules.Module, outputName, inputName string) error {
+	outputChannel, err := outputModule.Output(outputName)
+	if err != nil {
+		return err
+	}
+
+	input, err := m.Input(inputName)
+	if err != nil {
+		return err
+	}
+
+	outputChannel.Attach(input)
+	return nil
 }
 
 func (m *CustomModule) listen(ctx context.Context) {
