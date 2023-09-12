@@ -6,10 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	InputName = "signal"
-)
-
 // Module - cancels context of all application if get signal.
 //
 //	                |----------------|
@@ -21,6 +17,12 @@ type Module struct {
 	modules.BaseModule
 	stop context.CancelFunc
 }
+
+var _ modules.Module = &Module{}
+
+const (
+	InputName = "signal"
+)
 
 func NewModule(cancelFunc context.CancelFunc) Module {
 	m := Module{
