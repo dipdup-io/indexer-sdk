@@ -2,31 +2,39 @@ package modules
 
 import (
 	"context"
+	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/sync"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var _ Module = &BaseModule{}
 
 type BaseModule struct {
+	name    string
 	Inputs  *sync.Map[string, *Input]
 	Outputs *sync.Map[string, *Output]
+	Log     zerolog.Logger
+	G       workerpool.Group
+}
+
+func (m *BaseModule) Init(name string) {
+	m.name = name
+	m.Inputs = sync.NewMap[string, *Input]()
+	m.Outputs = sync.NewMap[string, *Output]()
+	m.Log = log.With().Str("module", name).Logger()
+	m.G = workerpool.NewGroup()
 }
 
 func (*BaseModule) Name() string {
 	return "base_module"
 }
 
-func (*BaseModule) Start(ctx context.Context) {}
+func (*BaseModule) Start(_ context.Context) {}
 
-func (m *BaseModule) Close() error { // TODO-DISCUSS
-	if m.Inputs == nil {
-		return nil
-	}
-
-	return m.Inputs.Range(func(name string, input *Input) (error, bool) { // TODO-DISCUSS
-		return input.Close(), false
-	})
+func (*BaseModule) Close() error {
+	return nil
 }
 
 func (m *BaseModule) Input(name string) (*Input, error) {
