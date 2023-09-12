@@ -13,7 +13,7 @@ type Module struct {
 	modules.BaseModule
 }
 
-var _ modules.Module = &Module{}
+var _ modules.Module = (*Module)(nil)
 
 // NewModule - creates cron module
 func NewModule(cfg *Config) (*Module, error) {

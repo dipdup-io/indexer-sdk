@@ -18,7 +18,7 @@ type Module struct {
 	stop context.CancelFunc
 }
 
-var _ modules.Module = &Module{}
+var _ modules.Module = (*Module)(nil)
 
 const (
 	InputName = "signal"

@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var _ modules.Module = &CustomModule{}
+var _ modules.Module = (*CustomModule)(nil)
 
 // CustomModule -
 type CustomModule struct {

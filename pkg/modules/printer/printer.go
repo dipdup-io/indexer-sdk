@@ -14,7 +14,7 @@ type Printer struct {
 
 const InputName = "input"
 
-var _ modules.Module = &Printer{}
+var _ modules.Module = (*Printer)(nil)
 
 // NewPrinter - constructor of printer structure
 func NewPrinter() Printer {

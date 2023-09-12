@@ -23,7 +23,7 @@ type Client struct {
 	wg     *sync.WaitGroup
 }
 
-var _ modules.Module = &Client{}
+var _ modules.Module = (*Client)(nil)
 
 // NewClient -
 func NewClient(server string) *Client {
