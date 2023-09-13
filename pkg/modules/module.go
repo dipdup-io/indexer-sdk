@@ -22,5 +22,5 @@ type Module interface {
 
 	Input(name string) (*Input, error)
 	Output(name string) (*Output, error)
-	AttachTo(outputName string, input *Input) error
+	AttachTo(output Module, outputName, inputName string) error
 }

@@ -55,13 +55,13 @@ So if your module should execute some work on `every_second` scheduled events fr
 ```go
 // with helper function
 
-if err := modules.Connect(cronModule, customModule, "every_second", "every_second"); err != nil {
+if err := modules.Connect(cronModule, customModule, "every_second", "custom_module_every_second_input"); err != nil {
     log.Panic(err)
 }
 
 // or directly to module
 
-if err := cronModule.AttachTo("every_second", customModule.everySecond); err != nil {
+if err := customModule.AttachTo(cronModule, "every_second", "custom_module_every_second_input"); err != nil {
     log.Panic(err)
 }
 ```

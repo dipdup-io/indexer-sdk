@@ -15,17 +15,19 @@ func main() {
 	first := NewCustomModule(10, -1, "first")
 	second := NewCustomModule(0, 1, "second")
 
-	if err := modules.Connect(first, zip, "output", zipper.FirstInputName); err != nil {
+	if err := modules.Connect(first, zip, zipper.OutputName, zipper.FirstInputName); err != nil {
 		log.Panic(err)
 	}
-	if err := modules.Connect(second, zip, "output", zipper.SecondInputName); err != nil {
+	if err := modules.Connect(second, zip, zipper.OutputName, zipper.SecondInputName); err != nil {
 		log.Panic(err)
 	}
 
 	fakeInput := modules.NewInput("fake")
-	if err := zip.AttachTo(zipper.OutputName, fakeInput); err != nil {
+	zipOutput, err := zip.Output(zipper.OutputName)
+	if err != nil {
 		log.Panic(err)
 	}
+	zipOutput.Attach(fakeInput)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()

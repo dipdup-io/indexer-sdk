@@ -79,12 +79,18 @@ func (m *Module[Key]) Output(name string) (*modules.Output, error) {
 }
 
 // AttachTo - attach input to output with name
-func (m *Module[Key]) AttachTo(name string, input *modules.Input) error {
-	output, err := m.Output(name)
+func (m *Module[Key]) AttachTo(outputModule modules.Module, outputName, inputName string) error {
+	outputChannel, err := outputModule.Output(outputName)
 	if err != nil {
 		return err
 	}
-	output.Attach(input)
+
+	input, err := m.Input(inputName)
+	if err != nil {
+		return err
+	}
+
+	outputChannel.Attach(input)
 	return nil
 }
 

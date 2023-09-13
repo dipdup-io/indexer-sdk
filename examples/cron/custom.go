@@ -9,6 +9,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var _ modules.Module = (*CustomModule)(nil)
+
 // CustomModule -
 type CustomModule struct {
 	everySecond     *modules.Input
@@ -50,8 +52,22 @@ func (m *CustomModule) Output(name string) (*modules.Output, error) {
 }
 
 // AttachTo -
-func (m *CustomModule) AttachTo(name string, input *modules.Input) error {
-	return errors.Wrap(modules.ErrUnknownOutput, name)
+func (m *CustomModule) AttachTo(outputM modules.Module, outputName, inputName string) error {
+	output, err := outputM.Output(outputName)
+	if err != nil {
+		return nil
+	}
+
+	switch inputName {
+	case "every_second":
+		output.Attach(m.everySecond)
+		return nil
+	case "every_five_second":
+		output.Attach(m.everyFiveSecond)
+		return nil
+	default:
+		return errors.Wrap(modules.ErrUnknownInput, inputName)
+	}
 }
 
 func (m *CustomModule) listen(ctx context.Context) {

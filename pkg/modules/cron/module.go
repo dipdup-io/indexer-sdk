@@ -4,30 +4,31 @@ import (
 	"context"
 
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
-	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 )
 
 // Module - cron module
 type Module struct {
 	cron *cron.Cron
-
-	outputs map[string]*modules.Output
+	modules.BaseModule
 }
+
+var _ modules.Module = (*Module)(nil)
 
 // NewModule - creates cron module
 func NewModule(cfg *Config) (*Module, error) {
 	module := &Module{
+		BaseModule: modules.New("cron"),
 		cron: cron.New(
 			cron.WithParser(cron.NewParser(
 				cron.SecondOptional | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor,
 			)),
 			// cron.WithLogger(cron.VerbosePrintfLogger(&log.Logger)),
 		),
-		outputs: make(map[string]*modules.Output),
 	}
+
 	for job, pattern := range cfg.Jobs {
-		module.outputs[job] = modules.NewOutput(job)
+		module.CreateOutput(job)
 
 		if _, err := module.cron.AddFunc(
 			pattern,
@@ -38,11 +39,6 @@ func NewModule(cfg *Config) (*Module, error) {
 	}
 
 	return module, nil
-}
-
-// Name -
-func (*Module) Name() string {
-	return "cron"
 }
 
 // Start - starts cron scheduler
@@ -56,33 +52,12 @@ func (module *Module) Close() error {
 	return nil
 }
 
-// Output -
-func (module *Module) Output(name string) (*modules.Output, error) {
-	output, ok := module.outputs[name]
-	if !ok {
-		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
-	}
-	return output, nil
-}
-
-// Input -
-func (module *Module) Input(name string) (*modules.Input, error) {
-	return nil, errors.Wrap(modules.ErrUnknownInput, name)
-}
-
-// AttachTo -
-func (module *Module) AttachTo(name string, input *modules.Input) error {
-	output, err := module.Output(name)
-	if err != nil {
-		return err
-	}
-
-	output.Attach(input)
-	return nil
-}
-
 func (module *Module) notify(job, pattern string) {
-	module.outputs[job].Push(struct{}{})
+	output, err := module.Output(job)
+	if err != nil {
+		module.Log.Panic().Msg("while getting output for notification")
+	}
+	output.Push(struct{}{})
 }
 
 func newHandler(module *Module, job, pattern string) func() {

@@ -23,6 +23,8 @@ type Client struct {
 	wg     *sync.WaitGroup
 }
 
+var _ modules.Module = (*Client)(nil)
+
 // NewClient -
 func NewClient(server string) *Client {
 	return &Client{
@@ -113,12 +115,18 @@ func (client *Client) Output(name string) (*modules.Output, error) {
 }
 
 // AttachTo -
-func (client *Client) AttachTo(name string, input *modules.Input) error {
-	output, err := client.Output(name)
+func (client *Client) AttachTo(outputModule modules.Module, outputName, inputName string) error {
+	outputChannel, err := outputModule.Output(outputName)
 	if err != nil {
 		return err
 	}
-	output.Attach(input)
+
+	input, err := client.Input(inputName)
+	if err != nil {
+		return err
+	}
+
+	outputChannel.Attach(input)
 	return nil
 }
 
