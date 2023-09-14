@@ -70,12 +70,30 @@ func (m *Module[Key]) Input(name string) (*modules.Input, error) {
 	}
 }
 
+// MustInput - returns input by name
+func (m *Module[Key]) MustInput(name string) *modules.Input {
+	input, err := m.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
 // Output - returns output by name
 func (m *Module[Key]) Output(name string) (*modules.Output, error) {
 	if name != OutputName {
 		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
 	}
 	return m.output, nil
+}
+
+// MustOutput - returns output by name
+func (m *Module[Key]) MustOutput(name string) *modules.Output {
+	output, err := m.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 // AttachTo - attach input to output with name

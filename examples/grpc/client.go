@@ -106,12 +106,30 @@ func (client *Client) Input(name string) (*modules.Input, error) {
 	return nil, errors.Wrap(modules.ErrUnknownInput, name)
 }
 
+// MustInput -
+func (client *Client) MustInput(name string) *modules.Input {
+	input, err := client.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
 // Output -
 func (client *Client) Output(name string) (*modules.Output, error) {
 	if name != "time" {
 		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
 	}
 	return client.output, nil
+}
+
+// MustOutput -
+func (client *Client) MustOutput(name string) *modules.Output {
+	output, err := client.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 // AttachTo -

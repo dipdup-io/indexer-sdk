@@ -49,6 +49,14 @@ func (m *BaseModule) Input(name string) (*Input, error) {
 	return input, nil
 }
 
+func (m *BaseModule) MustInput(name string) *Input {
+	input, err := m.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
 func (m *BaseModule) CreateInput(name string) {
 	m.inputs.Set(name, NewInput(name))
 }
@@ -59,6 +67,14 @@ func (m *BaseModule) Output(name string) (*Output, error) {
 		return nil, errors.Wrap(ErrUnknownOutput, name)
 	}
 	return output, nil
+}
+
+func (m *BaseModule) MustOutput(name string) *Output {
+	output, err := m.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 func (m *BaseModule) CreateOutput(name string) {

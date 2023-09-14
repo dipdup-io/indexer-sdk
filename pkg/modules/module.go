@@ -21,6 +21,8 @@ type Module interface {
 	Start(ctx context.Context)
 
 	Input(name string) (*Input, error)
+	MustInput(name string) *Input
 	Output(name string) (*Output, error)
+	MustOutput(name string) *Output
 	AttachTo(output Module, outputName, inputName string) error
 }
