@@ -108,7 +108,11 @@ func (client *Client) Input(name string) (*modules.Input, error) {
 
 // MustInput -
 func (client *Client) MustInput(name string) *modules.Input {
-	panic(errors.Wrap(modules.ErrUnknownInput, name))
+	input, err := client.Input(name)
+	if err != nil {
+		panic(err)
+	}
+	return input
 }
 
 // Output -
@@ -121,10 +125,11 @@ func (client *Client) Output(name string) (*modules.Output, error) {
 
 // MustOutput -
 func (client *Client) MustOutput(name string) *modules.Output {
-	if name != "time" {
-		panic(errors.Wrap(modules.ErrUnknownOutput, name))
+	output, err := client.Output(name)
+	if err != nil {
+		panic(err)
 	}
-	return client.output
+	return output
 }
 
 // AttachTo -

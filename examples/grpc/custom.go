@@ -41,10 +41,11 @@ func (m *CustomModule) Input(name string) (*modules.Input, error) {
 
 // MustInput -
 func (m *CustomModule) MustInput(name string) *modules.Input {
-	if name != "input" {
-		panic(errors.Wrap(modules.ErrUnknownInput, name))
+	input, err := m.Input(name)
+	if err != nil {
+		panic(err)
 	}
-	return m.input
+	return input
 }
 
 // Output -
@@ -54,7 +55,11 @@ func (m *CustomModule) Output(name string) (*modules.Output, error) {
 
 // MustOutput -
 func (m *CustomModule) MustOutput(name string) *modules.Output {
-	panic(errors.Wrap(modules.ErrUnknownOutput, name))
+	output, err := m.Output(name)
+	if err != nil {
+		panic(err)
+	}
+	return output
 }
 
 // AttachTo -
