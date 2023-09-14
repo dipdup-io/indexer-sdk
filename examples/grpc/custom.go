@@ -39,9 +39,22 @@ func (m *CustomModule) Input(name string) (*modules.Input, error) {
 	return m.input, nil
 }
 
+// MustInput -
+func (m *CustomModule) MustInput(name string) *modules.Input {
+	if name != "input" {
+		panic(errors.Wrap(modules.ErrUnknownInput, name))
+	}
+	return m.input
+}
+
 // Output -
 func (m *CustomModule) Output(name string) (*modules.Output, error) {
 	return nil, errors.Wrap(modules.ErrUnknownOutput, name)
+}
+
+// MustOutput -
+func (m *CustomModule) MustOutput(name string) *modules.Output {
+	panic(errors.Wrap(modules.ErrUnknownOutput, name))
 }
 
 // AttachTo -

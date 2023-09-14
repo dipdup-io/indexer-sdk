@@ -70,12 +70,32 @@ func (m *Module[Key]) Input(name string) (*modules.Input, error) {
 	}
 }
 
+// MustInput - returns input by name
+func (m *Module[Key]) MustInput(name string) *modules.Input {
+	switch name {
+	case FirstInputName:
+		return m.firstInput
+	case SecondInputName:
+		return m.secondInput
+	default:
+		panic(errors.Wrap(modules.ErrUnknownInput, name))
+	}
+}
+
 // Output - returns output by name
 func (m *Module[Key]) Output(name string) (*modules.Output, error) {
 	if name != OutputName {
 		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
 	}
 	return m.output, nil
+}
+
+// MustOutput - returns output by name
+func (m *Module[Key]) MustOutput(name string) *modules.Output {
+	if name != OutputName {
+		panic(errors.Wrap(modules.ErrUnknownOutput, name))
+	}
+	return m.output
 }
 
 // AttachTo - attach input to output with name

@@ -34,12 +34,25 @@ func (m *CustomModule) Input(name string) (*modules.Input, error) {
 	return nil, errors.Wrap(modules.ErrUnknownInput, name)
 }
 
+// MustInput -
+func (m *CustomModule) MustInput(name string) *modules.Input {
+	panic(errors.Wrap(modules.ErrUnknownInput, name))
+}
+
 // Output -
 func (m *CustomModule) Output(name string) (*modules.Output, error) {
 	if name != "output" {
 		return nil, errors.Wrap(modules.ErrUnknownOutput, name)
 	}
 	return m.output, nil
+}
+
+// MustOutput -
+func (m *CustomModule) MustOutput(name string) *modules.Output {
+	if name != "output" {
+		panic(errors.Wrap(modules.ErrUnknownOutput, name))
+	}
+	return m.output
 }
 
 // AttachTo -
