@@ -1,5 +1,9 @@
 package modules
 
+const (
+	defaultCapacity = 1024
+)
+
 // Input -
 type Input struct {
 	data chan any
@@ -9,7 +13,18 @@ type Input struct {
 // NewInput -
 func NewInput(name string) *Input {
 	return &Input{
-		data: make(chan any, 1024),
+		data: make(chan any, defaultCapacity),
+		name: name,
+	}
+}
+
+// NewInputWithCapacity -
+func NewInputWithCapacity(name string, cap int) *Input {
+	if cap < 0 {
+		cap = defaultCapacity
+	}
+	return &Input{
+		data: make(chan any, cap),
 		name: name,
 	}
 }

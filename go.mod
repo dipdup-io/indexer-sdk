@@ -1,6 +1,6 @@
 module github.com/dipdup-net/indexer-sdk
 
-go 1.20
+go 1.21
 
 require (
 	github.com/dipdup-io/workerpool v0.0.4
