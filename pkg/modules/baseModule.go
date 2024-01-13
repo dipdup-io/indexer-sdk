@@ -2,6 +2,7 @@ package modules
 
 import (
 	"context"
+
 	"github.com/dipdup-io/workerpool"
 	"github.com/dipdup-net/indexer-sdk/pkg/sync"
 	"github.com/pkg/errors"
@@ -59,6 +60,10 @@ func (m *BaseModule) MustInput(name string) *Input {
 
 func (m *BaseModule) CreateInput(name string) {
 	m.inputs.Set(name, NewInput(name))
+}
+
+func (m *BaseModule) CreateInputWithCapacity(name string, cap int) {
+	m.inputs.Set(name, NewInputWithCapacity(name, cap))
 }
 
 func (m *BaseModule) Output(name string) (*Output, error) {
