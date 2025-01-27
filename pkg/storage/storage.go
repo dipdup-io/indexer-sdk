@@ -48,6 +48,8 @@ func (c Comparator) String() string {
 }
 
 // Table - interface to communication with one data type (like table, collection, etc)
+//
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Table[M Model] interface {
 	GetByID(ctx context.Context, id uint64) (M, error)
 	Save(ctx context.Context, m M) error
@@ -60,11 +62,15 @@ type Table[M Model] interface {
 }
 
 // Transactable - interface which allows to begin atomic transaction operation
+//
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Transactable interface {
 	BeginTransaction(ctx context.Context) (Transaction, error)
 }
 
 // Transaction - atomic transaction operation interface
+//
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Transaction interface {
 	Flush(ctx context.Context) error
 	Add(ctx context.Context, model any) error
@@ -79,11 +85,15 @@ type Transaction interface {
 }
 
 // Model - general data type interface
+//
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Model interface {
 	TableName() string
 }
 
 // Copiable -
+//
+//go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Copiable interface {
 	Columns() []string
 	Flat() []any

@@ -26,4 +26,7 @@ generate:
 test:
 	go test ./...
 
+mockgen:
+	go generate -v ./pkg/storage
+
 .PHONY: init lint generate test
