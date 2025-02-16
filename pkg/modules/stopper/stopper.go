@@ -2,6 +2,7 @@ package stopper
 
 import (
 	"context"
+
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 	"github.com/rs/zerolog/log"
 )
@@ -24,14 +25,14 @@ const (
 	InputName = "signal"
 )
 
-func NewModule(cancelFunc context.CancelFunc) Module {
+func NewModule(cancelFunc context.CancelFunc) *Module {
 	m := Module{
 		BaseModule: modules.New("stopper"),
 		stop:       cancelFunc,
 	}
 	m.CreateInput(InputName)
 
-	return m
+	return &m
 }
 
 // Start -

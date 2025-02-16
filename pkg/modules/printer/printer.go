@@ -3,6 +3,7 @@ package printer
 import (
 	"context"
 	"fmt"
+
 	"github.com/dipdup-net/indexer-sdk/pkg/modules"
 )
 
@@ -17,10 +18,10 @@ const InputName = "input"
 var _ modules.Module = (*Printer)(nil)
 
 // NewPrinter - constructor of printer structure
-func NewPrinter() Printer {
+func NewPrinter() *Printer {
 	p := Printer{BaseModule: modules.New("printer")}
 	p.CreateInput(InputName)
-	return p
+	return &p
 }
 
 // Close - gracefully stops module
