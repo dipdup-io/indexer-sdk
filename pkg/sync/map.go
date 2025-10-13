@@ -67,3 +67,23 @@ func (m *Map[K, V]) Len() int {
 	defer m.mx.RUnlock()
 	return len(m.m)
 }
+
+func (m *Map[K, V]) Values() []V {
+	arr := make([]V, 0)
+	m.mx.RLock()
+	for _, v := range m.m {
+		arr = append(arr, v)
+	}
+	m.mx.RUnlock()
+	return arr
+}
+
+func (m *Map[K, V]) Keys() []K {
+	arr := make([]K, 0)
+	m.mx.RLock()
+	for k := range m.m {
+		arr = append(arr, k)
+	}
+	m.mx.RUnlock()
+	return arr
+}
