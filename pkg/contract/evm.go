@@ -178,8 +178,8 @@ func createSchemaItem(name string, idx int, typ *abi.Type) (js.JSONSchema, error
 			if err != nil {
 				return elem, err
 			}
-			schema.ObjectItem.Properties[typ.TupleRawNames[compIdx]] = elem
-			schema.ObjectItem.Required = append(schema.ObjectItem.Required, typ.TupleRawNames[compIdx])
+			schema.Properties[typ.TupleRawNames[compIdx]] = elem
+			schema.Required = append(schema.Required, typ.TupleRawNames[compIdx])
 		}
 
 		return schema, nil

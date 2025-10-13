@@ -174,7 +174,7 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 func generateArrayItem(name string, prop *js.JSONSchema, types map[string]goType) goType {
 	name = buildName(name, "Item")
 
-	if prop.ArrayItem.Items != nil {
+	if prop.Items != nil {
 		switch len(prop.Items) {
 		case 0:
 			return goType{

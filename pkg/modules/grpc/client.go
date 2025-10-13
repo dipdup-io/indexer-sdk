@@ -10,7 +10,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
-	gogrpc "google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/encoding/gzip"
@@ -19,7 +18,7 @@ import (
 
 // Client - the structure which is responsible for connection to server
 type Client struct {
-	conn *gogrpc.ClientConn
+	conn *grpc.ClientConn
 
 	serverAddress string
 	reconnect     chan struct{}
@@ -43,8 +42,8 @@ func (client *Client) Name() string {
 
 // Connect - connects to server
 func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error {
-	dialOpts := []gogrpc.DialOption{
-		gogrpc.WithKeepaliveParams(keepalive.ClientParameters{
+	dialOpts := []grpc.DialOption{
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:    10 * time.Second,
 			Timeout: 10 * time.Second,
 		}),
@@ -53,9 +52,9 @@ func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error 
 	for i := range opts {
 		opts[i](&connectOpts)
 	}
-	dialOpts = append(dialOpts, gogrpc.WithTransportCredentials(connectOpts.creds))
-	dialOpts = append(dialOpts, gogrpc.WithConnectParams(
-		gogrpc.ConnectParams{
+	dialOpts = append(dialOpts, grpc.WithTransportCredentials(connectOpts.creds))
+	dialOpts = append(dialOpts, grpc.WithConnectParams(
+		grpc.ConnectParams{
 			MinConnectTimeout: connectOpts.reconnectTimeout,
 			Backoff: backoff.Config{
 				BaseDelay:  1.0 * time.Second,
@@ -65,14 +64,14 @@ func (client *Client) Connect(ctx context.Context, opts ...ConnectOption) error 
 			},
 		},
 	))
-	dialOpts = append(dialOpts, gogrpc.WithUserAgent(connectOpts.userAgent))
+	dialOpts = append(dialOpts, grpc.WithUserAgent(connectOpts.userAgent))
 	dialOpts = append(dialOpts, grpc.WithDefaultCallOptions(grpc.UseCompressor(gzip.Name)))
 
 	if connectOpts.wait {
-		dialOpts = append(dialOpts, gogrpc.WithBlock())
+		dialOpts = append(dialOpts, grpc.WithBlock()) //nolint
 	}
 
-	conn, err := gogrpc.Dial(
+	conn, err := grpc.Dial( //nolint
 		client.serverAddress,
 		dialOpts...,
 	)

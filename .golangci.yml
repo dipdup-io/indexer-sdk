@@ -1,14 +1,28 @@
+version: "2"
 linters:
   enable:
+    - containedctx
     - goconst
     - gocritic
-    - gofmt
-    - govet
     - prealloc
     - unconvert
-    - unused
-    - errcheck
-    - ineffassign
-    - containedctx
-    - tenv
-
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
