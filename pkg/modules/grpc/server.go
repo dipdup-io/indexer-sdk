@@ -19,7 +19,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/ratelimit"
 	"google.golang.org/grpc"
-	gogrpc "google.golang.org/grpc"
 	_ "google.golang.org/grpc/encoding/gzip" // Install the gzip compressor
 	"google.golang.org/grpc/keepalive"
 )
@@ -28,7 +27,7 @@ import (
 type Server struct {
 	bind string
 
-	server        *gogrpc.Server
+	server        *grpc.Server
 	metricsServer *http.Server
 	srvMetrics    *grpcprom.ServerMetrics
 
@@ -45,14 +44,14 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 		wg:   new(sync.WaitGroup),
 	}
 
-	opts := []gogrpc.ServerOption{
-		gogrpc.KeepaliveParams(
+	opts := []grpc.ServerOption{
+		grpc.KeepaliveParams(
 			keepalive.ServerParameters{
 				Time:    20 * time.Second,
 				Timeout: 10 * time.Second,
 			},
 		),
-		gogrpc.KeepaliveEnforcementPolicy(
+		grpc.KeepaliveEnforcementPolicy(
 			keepalive.EnforcementPolicy{
 				MinTime:             10 * time.Second,
 				PermitWithoutStream: true,
@@ -60,8 +59,8 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 		),
 	}
 
-	streamInterceptors := make([]gogrpc.StreamServerInterceptor, 0)
-	unaryInterceptors := make([]gogrpc.UnaryServerInterceptor, 0)
+	streamInterceptors := make([]grpc.StreamServerInterceptor, 0)
+	unaryInterceptors := make([]grpc.UnaryServerInterceptor, 0)
 
 	if cfg.Log {
 		streamInterceptors = append(streamInterceptors, logging.StreamServerInterceptor(logCalls()))
@@ -83,16 +82,16 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 
 	if len(streamInterceptors) > 0 {
 		opts = append(opts,
-			gogrpc.ChainStreamInterceptor(streamInterceptors...),
+			grpc.ChainStreamInterceptor(streamInterceptors...),
 		)
 	}
 	if len(unaryInterceptors) > 0 {
 		opts = append(opts,
-			gogrpc.ChainUnaryInterceptor(unaryInterceptors...),
+			grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		)
 	}
 
-	module.server = gogrpc.NewServer(opts...)
+	module.server = grpc.NewServer(opts...)
 	return module, nil
 }
 
@@ -169,7 +168,7 @@ func (module *Server) Close() error {
 }
 
 // Server - returns current grpc.Server to register handlers
-func (module *Server) Server() *gogrpc.Server {
+func (module *Server) Server() *grpc.Server {
 	return module.server
 }
 

@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestMap_Get(t *testing.T) {
@@ -169,4 +171,30 @@ func TestMap_Len(t *testing.T) {
 	if length != 3 {
 		t.Fatalf("unexpected map size, got %v want %v", length, 3)
 	}
+}
+
+func TestMap_Values(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"len", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	values := m.Values()
+	require.Len(t, values, 3)
+	require.Contains(t, values, "len")
+	require.Contains(t, values, "sync")
+	require.Contains(t, values, "map")
+}
+
+func TestMap_Keys(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"len", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	keys := m.Keys()
+	require.Len(t, keys, 3)
+	require.Contains(t, keys, 0)
+	require.Contains(t, keys, 1)
+	require.Contains(t, keys, 2)
 }
