@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/uptrace/bun"
 )
 
@@ -80,8 +81,8 @@ type Transaction interface {
 	Close(ctx context.Context) error
 	HandleError(ctx context.Context, err error) error
 	Exec(ctx context.Context, query string, params ...any) (int64, error)
-	CopyFrom(ctx context.Context, tableName string, data []Copiable) error
 	Tx() *bun.Tx
+	Pool() *pgx.Conn
 }
 
 // Model - general data type interface
@@ -91,10 +92,11 @@ type Model interface {
 	TableName() string
 }
 
-// Copiable -
+// Copiable - interface for using COPY FROM/TO
 //
 //go:generate mockgen -source=$GOFILE -destination=mock/$GOFILE -package=mock -typed
 type Copiable interface {
+	Flat() ([]any, error)
 	Columns() []string
-	Flat() []any
+	TableName() string
 }

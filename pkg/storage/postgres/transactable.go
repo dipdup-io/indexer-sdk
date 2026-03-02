@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/dipdup-net/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pkg/errors"
 )
 
 // Transactable - realization of Transactable interface for Postgres
@@ -20,9 +22,25 @@ func NewTransactable(db *database.Bun) *Transactable {
 
 // BeginTransaction - opens atomic transaction to communication with Postgres
 func (t *Transactable) BeginTransaction(ctx context.Context) (storage.Transaction, error) {
-	tx, err := t.db.DB().BeginTx(ctx, &sql.TxOptions{})
+	bunConn, err := t.db.DB().Conn(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "tx connection")
 	}
-	return &Transaction{&tx}, nil
+
+	var pgxConn *pgx.Conn
+	bunConn.Raw(func(c any) error {
+		pgxConn = c.(*stdlib.Conn).Conn()
+		return nil
+	})
+
+	tx, err := bunConn.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "begin tx")
+	}
+
+	return &Transaction{
+		conn:    bunConn,
+		tx:      &tx,
+		pgxConn: pgxConn,
+	}, nil
 }

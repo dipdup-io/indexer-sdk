@@ -3,8 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/dipdup-net/indexer-sdk/pkg/storage"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5"
 	"github.com/pkg/errors"
 	"github.com/uptrace/bun"
 )
@@ -15,7 +14,9 @@ var (
 
 // Transaction -
 type Transaction struct {
-	tx *bun.Tx
+	conn    bun.Conn
+	tx      *bun.Tx
+	pgxConn *pgx.Conn
 }
 
 // Flush -
@@ -51,7 +52,7 @@ func (t *Transaction) Rollback(ctx context.Context) error {
 // Close -
 func (t *Transaction) Close(ctx context.Context) error {
 	t.tx = nil
-	return nil
+	return t.conn.Close()
 }
 
 // Update -
@@ -100,31 +101,8 @@ func (t *Transaction) Exec(ctx context.Context, query string, params ...any) (in
 	return result.RowsAffected()
 }
 
-// CopyFrom -
-func (t *Transaction) CopyFrom(ctx context.Context, tableName string, data []storage.Copiable) error {
-	if len(data) == 0 {
-		return nil
-	}
-	if t.tx == nil {
-		return errNilTx
-	}
-
-	stmt, err := t.tx.PrepareContext(ctx, pq.CopyIn(tableName, data[0].Columns()...))
-	if err != nil {
-		return err
-	}
-
-	for i := range data {
-		if _, err := stmt.ExecContext(ctx, data[i].Flat()...); err != nil {
-			return err
-		}
-	}
-
-	if _, err := stmt.ExecContext(ctx); err != nil {
-		return err
-	}
-
-	return stmt.Close()
+func (t *Transaction) Pool() *pgx.Conn {
+	return t.pgxConn
 }
 
 // Tx - returns bun.Tx pointer for custom queries
