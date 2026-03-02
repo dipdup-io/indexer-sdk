@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	storage "github.com/dipdup-net/indexer-sdk/pkg/storage"
+	pgx "github.com/jackc/pgx/v5"
 	bun "github.com/uptrace/bun"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -22,6 +23,7 @@ import (
 type MockTable[M storage.Model] struct {
 	ctrl     *gomock.Controller
 	recorder *MockTableMockRecorder[M]
+	isgomock struct{}
 }
 
 // MockTableMockRecorder is the mock recorder for MockTable.
@@ -315,6 +317,7 @@ func (c *MockTableUpdateCall[M]) DoAndReturn(f func(context.Context, M) error) *
 type MockTransactable struct {
 	ctrl     *gomock.Controller
 	recorder *MockTransactableMockRecorder
+	isgomock struct{}
 }
 
 // MockTransactableMockRecorder is the mock recorder for MockTransactable.
@@ -377,6 +380,7 @@ func (c *MockTransactableBeginTransactionCall) DoAndReturn(f func(context.Contex
 type MockTransaction struct {
 	ctrl     *gomock.Controller
 	recorder *MockTransactionMockRecorder
+	isgomock struct{}
 }
 
 // MockTransactionMockRecorder is the mock recorder for MockTransaction.
@@ -510,44 +514,6 @@ func (c *MockTransactionCloseCall) DoAndReturn(f func(context.Context) error) *M
 	return c
 }
 
-// CopyFrom mocks base method.
-func (m *MockTransaction) CopyFrom(ctx context.Context, tableName string, data []storage.Copiable) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CopyFrom", ctx, tableName, data)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CopyFrom indicates an expected call of CopyFrom.
-func (mr *MockTransactionMockRecorder) CopyFrom(ctx, tableName, data any) *MockTransactionCopyFromCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CopyFrom", reflect.TypeOf((*MockTransaction)(nil).CopyFrom), ctx, tableName, data)
-	return &MockTransactionCopyFromCall{Call: call}
-}
-
-// MockTransactionCopyFromCall wrap *gomock.Call
-type MockTransactionCopyFromCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockTransactionCopyFromCall) Return(arg0 error) *MockTransactionCopyFromCall {
-	c.Call = c.Call.Return(arg0)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockTransactionCopyFromCall) Do(f func(context.Context, string, []storage.Copiable) error) *MockTransactionCopyFromCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockTransactionCopyFromCall) DoAndReturn(f func(context.Context, string, []storage.Copiable) error) *MockTransactionCopyFromCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
 // Exec mocks base method.
 func (m *MockTransaction) Exec(ctx context.Context, query string, params ...any) (int64, error) {
 	m.ctrl.T.Helper()
@@ -664,6 +630,44 @@ func (c *MockTransactionHandleErrorCall) Do(f func(context.Context, error) error
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockTransactionHandleErrorCall) DoAndReturn(f func(context.Context, error) error) *MockTransactionHandleErrorCall {
+	c.Call = c.Call.DoAndReturn(f)
+	return c
+}
+
+// Pool mocks base method.
+func (m *MockTransaction) Pool() *pgx.Conn {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pool")
+	ret0, _ := ret[0].(*pgx.Conn)
+	return ret0
+}
+
+// Pool indicates an expected call of Pool.
+func (mr *MockTransactionMockRecorder) Pool() *MockTransactionPoolCall {
+	mr.mock.ctrl.T.Helper()
+	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pool", reflect.TypeOf((*MockTransaction)(nil).Pool))
+	return &MockTransactionPoolCall{Call: call}
+}
+
+// MockTransactionPoolCall wrap *gomock.Call
+type MockTransactionPoolCall struct {
+	*gomock.Call
+}
+
+// Return rewrite *gomock.Call.Return
+func (c *MockTransactionPoolCall) Return(arg0 *pgx.Conn) *MockTransactionPoolCall {
+	c.Call = c.Call.Return(arg0)
+	return c
+}
+
+// Do rewrite *gomock.Call.Do
+func (c *MockTransactionPoolCall) Do(f func() *pgx.Conn) *MockTransactionPoolCall {
+	c.Call = c.Call.Do(f)
+	return c
+}
+
+// DoAndReturn rewrite *gomock.Call.DoAndReturn
+func (c *MockTransactionPoolCall) DoAndReturn(f func() *pgx.Conn) *MockTransactionPoolCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }
@@ -786,6 +790,7 @@ func (c *MockTransactionUpdateCall) DoAndReturn(f func(context.Context, any) err
 type MockModel struct {
 	ctrl     *gomock.Controller
 	recorder *MockModelMockRecorder
+	isgomock struct{}
 }
 
 // MockModelMockRecorder is the mock recorder for MockModel.
@@ -839,105 +844,6 @@ func (c *MockModelTableNameCall) Do(f func() string) *MockModelTableNameCall {
 
 // DoAndReturn rewrite *gomock.Call.DoAndReturn
 func (c *MockModelTableNameCall) DoAndReturn(f func() string) *MockModelTableNameCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
-// MockCopiable is a mock of Copiable interface.
-type MockCopiable struct {
-	ctrl     *gomock.Controller
-	recorder *MockCopiableMockRecorder
-}
-
-// MockCopiableMockRecorder is the mock recorder for MockCopiable.
-type MockCopiableMockRecorder struct {
-	mock *MockCopiable
-}
-
-// NewMockCopiable creates a new mock instance.
-func NewMockCopiable(ctrl *gomock.Controller) *MockCopiable {
-	mock := &MockCopiable{ctrl: ctrl}
-	mock.recorder = &MockCopiableMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCopiable) EXPECT() *MockCopiableMockRecorder {
-	return m.recorder
-}
-
-// Columns mocks base method.
-func (m *MockCopiable) Columns() []string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Columns")
-	ret0, _ := ret[0].([]string)
-	return ret0
-}
-
-// Columns indicates an expected call of Columns.
-func (mr *MockCopiableMockRecorder) Columns() *MockCopiableColumnsCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Columns", reflect.TypeOf((*MockCopiable)(nil).Columns))
-	return &MockCopiableColumnsCall{Call: call}
-}
-
-// MockCopiableColumnsCall wrap *gomock.Call
-type MockCopiableColumnsCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockCopiableColumnsCall) Return(arg0 []string) *MockCopiableColumnsCall {
-	c.Call = c.Call.Return(arg0)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockCopiableColumnsCall) Do(f func() []string) *MockCopiableColumnsCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockCopiableColumnsCall) DoAndReturn(f func() []string) *MockCopiableColumnsCall {
-	c.Call = c.Call.DoAndReturn(f)
-	return c
-}
-
-// Flat mocks base method.
-func (m *MockCopiable) Flat() []any {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Flat")
-	ret0, _ := ret[0].([]any)
-	return ret0
-}
-
-// Flat indicates an expected call of Flat.
-func (mr *MockCopiableMockRecorder) Flat() *MockCopiableFlatCall {
-	mr.mock.ctrl.T.Helper()
-	call := mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Flat", reflect.TypeOf((*MockCopiable)(nil).Flat))
-	return &MockCopiableFlatCall{Call: call}
-}
-
-// MockCopiableFlatCall wrap *gomock.Call
-type MockCopiableFlatCall struct {
-	*gomock.Call
-}
-
-// Return rewrite *gomock.Call.Return
-func (c *MockCopiableFlatCall) Return(arg0 []any) *MockCopiableFlatCall {
-	c.Call = c.Call.Return(arg0)
-	return c
-}
-
-// Do rewrite *gomock.Call.Do
-func (c *MockCopiableFlatCall) Do(f func() []any) *MockCopiableFlatCall {
-	c.Call = c.Call.Do(f)
-	return c
-}
-
-// DoAndReturn rewrite *gomock.Call.DoAndReturn
-func (c *MockCopiableFlatCall) DoAndReturn(f func() []any) *MockCopiableFlatCall {
 	c.Call = c.Call.DoAndReturn(f)
 	return c
 }

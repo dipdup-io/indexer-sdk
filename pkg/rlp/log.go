@@ -13,7 +13,7 @@ type Log struct {
 
 // EncodeLogData -
 func EncodeLogData(l types.Log) ([]byte, error) {
-	topics := make([][32]byte, 0)
+	topics := make([][32]byte, 0, len(l.Topics))
 	for i := range l.Topics {
 		var topic [32]byte
 		copy(topic[:], l.Topics[i].Bytes())

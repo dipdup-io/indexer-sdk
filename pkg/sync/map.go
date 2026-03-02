@@ -69,7 +69,7 @@ func (m *Map[K, V]) Len() int {
 }
 
 func (m *Map[K, V]) Values() []V {
-	arr := make([]V, 0)
+	arr := make([]V, 0, len(m.m))
 	m.mx.RLock()
 	for _, v := range m.m {
 		arr = append(arr, v)
@@ -79,7 +79,7 @@ func (m *Map[K, V]) Values() []V {
 }
 
 func (m *Map[K, V]) Keys() []K {
-	arr := make([]K, 0)
+	arr := make([]K, 0, len(m.m))
 	m.mx.RLock()
 	for k := range m.m {
 		arr = append(arr, k)

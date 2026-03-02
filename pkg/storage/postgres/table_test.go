@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"os"
 	"testing"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 	"github.com/uptrace/bun"
-	"gopkg.in/yaml.v3"
 )
 
 type person struct {
@@ -41,8 +39,8 @@ func newPersonTable(conn *database.Bun) personTable {
 }
 
 // Flat -
-func (p person) Flat() []any {
-	return []any{p.Id, p.Name, p.Age}
+func (p person) Flat() ([]any, error) {
+	return []any{p.Id, p.Name, p.Age}, nil
 }
 
 // Columns -
@@ -318,56 +316,6 @@ func (s *TableTestSuite) TestTransaction() {
 	s.Require().EqualValues(updP.Id, updPerson.Id)
 	s.Require().Equal(updP.Name, updPerson.Name)
 	s.Require().EqualValues(updP.Age, updPerson.Age)
-}
-
-func (s *TableTestSuite) TestTransactionCopyFrom() {
-	db, err := sql.Open("postgres", s.psqlContainer.GetDSN())
-	s.Require().NoError(err)
-
-	fixtures, err := testfixtures.New(
-		testfixtures.Database(db),
-		testfixtures.Dialect("postgres"),
-		testfixtures.Directory("test/fixtures"),
-	)
-	s.Require().NoError(err)
-	s.Require().NoError(fixtures.Load())
-	s.Require().NoError(db.Close())
-
-	transactable := NewTransactable(s.db)
-
-	ctx, ctxCancel := context.WithTimeout(context.Background(), 1000*time.Second)
-	defer ctxCancel()
-
-	tx, err := transactable.BeginTransaction(ctx)
-	s.Require().NoError(err)
-
-	res, err := tx.Exec(ctx, "delete from person")
-	s.Require().NoError(err)
-	s.Require().EqualValues(4, res)
-
-	f, err := os.Open("test/fixtures/person.yml")
-	s.Require().NoError(err)
-	defer f.Close()
-
-	var ps []person
-	err = yaml.NewDecoder(f).Decode(&ps)
-	s.Require().NoError(err)
-
-	data := make([]storage.Copiable, len(ps))
-	for i := range ps {
-		data[i] = ps[i]
-	}
-
-	err = tx.CopyFrom(ctx, ps[0].TableName(), data)
-	s.Require().NoError(err)
-
-	s.Require().NoError(tx.Rollback(ctx))
-	s.Require().NoError(tx.Close(ctx))
-
-	count, err := s.db.DB().NewSelect().Model(&person{}).Count(ctx)
-	s.Require().NoError(err)
-	s.Require().EqualValues(4, count)
-
 }
 
 func TestSuite_Run(t *testing.T) {
