@@ -3,6 +3,7 @@ package postgres
 import (
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 // Pagination - adds limit, offset and sort to query. Query being like this:
@@ -61,7 +62,7 @@ func In[M any](query *bun.SelectQuery, field string, arr []M) *bun.SelectQuery {
 		return query
 	}
 
-	query.Where("? IN (?)", bun.Ident(field), bun.In(arr))
+	query.Where("? IN ?", bun.Ident(field), bun.Tuple(arr))
 
 	return query
 }
@@ -76,7 +77,7 @@ func Any[M any](query *bun.SelectQuery, field string, arr []M) *bun.SelectQuery 
 		return query
 	}
 
-	query.Where("? = ANY(?)", bun.Ident(field), bun.In(arr))
+	query.Where("? = ANY(?)", bun.Ident(field), pgdialect.Array(arr))
 
 	return query
 }

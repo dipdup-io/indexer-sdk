@@ -28,10 +28,12 @@ func (t *Transactable) BeginTransaction(ctx context.Context) (storage.Transactio
 	}
 
 	var pgxConn *pgx.Conn
-	bunConn.Raw(func(c any) error {
+	if err := bunConn.Raw(func(c any) error {
 		pgxConn = c.(*stdlib.Conn).Conn()
 		return nil
-	})
+	}); err != nil {
+		return nil, errors.Wrap(err, "raw")
+	}
 
 	tx, err := bunConn.BeginTx(ctx, nil)
 	if err != nil {
