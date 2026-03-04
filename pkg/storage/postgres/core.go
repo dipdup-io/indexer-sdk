@@ -30,6 +30,9 @@ func Create(ctx context.Context, cfg config.Database, init Init) (*Storage, erro
 		if err := init(ctx, conn); err != nil {
 			return nil, err
 		}
+
+		// reset all connections for registering custom types
+		conn.Pool().Reset()
 	}
 
 	return &Storage{
