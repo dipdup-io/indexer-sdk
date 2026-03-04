@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/dipdup-net/go-lib/config"
-	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-io/go-lib/config"
+	"github.com/dipdup-io/go-lib/database"
 )
 
 // Init - type of initialization function which called after creating connection to database. For example, can be used for indexes creation.

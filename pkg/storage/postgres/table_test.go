@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dipdup-net/go-lib/config"
-	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-io/go-lib/config"
+	"github.com/dipdup-io/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/go-testfixtures/testfixtures/v3"
 	_ "github.com/lib/pq"

@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-io/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/examples/storage/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
 )

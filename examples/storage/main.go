@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/dipdup-net/go-lib/config"
+	"github.com/dipdup-io/go-lib/config"
 	"github.com/dipdup-net/indexer-sdk/examples/storage/storage"
 	"github.com/dipdup-net/indexer-sdk/examples/storage/storage/postgres"
 )
