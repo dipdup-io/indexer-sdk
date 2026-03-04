@@ -6,7 +6,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-io/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 	"github.com/uptrace/bun"
 )

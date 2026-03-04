@@ -1,99 +1,188 @@
 # Modules
 
- Flow-based programming is the base of SDK. It is a set of asynchronous modules which can be combinated in workflow. Each module implement a function that has N inputs and M outputs and executes asynchronously (N, M >= 0). In our implementation inputs are untyped. So each module has to check type of received message. 
+Flow-based programming (FBP) framework. Modules are independent asynchronous units with N inputs and M outputs that can be composed into workflows.
 
- ## Interface
+## Module Interface
 
- Module has to implement the interface `Module`:
+Every module implements:
 
- ```go
+```go
 type Module interface {
-	io.Closer
+    io.Closer
 
-	Name() string
-	Start(ctx context.Context)
-	Input(name string) (*Input, error)
-	Output(name string) (*Output, error)
-	AttachTo(outputName string, input *Input) error
-}
- ``` 
-
-Interface contains following methods:
-
- * `Start` - starts asynchronous waiting of messages in inputs and initialize module state.
- * `Close` - gracefully stops all module activities (inherited from `io.Closer` interface).
- * `Name` - returns name of module which will be used in workflow construction.
- * `Input` - returns input by its name.
- * `Output` - returns output by its name.
- * `AttachTo` - connects output with name to passed input of another module. 
-
-## Inputs and outputs
-
-All communication between modules is implemented via inputs/outputs. Input is the structure contains channel with `any` as data. It also has name which will be its identity in module's scope.
-
-```go
-type Input struct {
-	data chan any
-	name string
-}
-```
-It has following methods:
-
-* `Close` - closes channel of input
-* `Push` - sends message to channel
-* `Listen` - waits new message
-* `Name` - returns input name
-
-Output is the set of inputs which connected to it. When module send message to output it iterates over all connected inputs and pushes message to them. Output also has name which identifies it.
-
-```go
-type Output struct {
-	connectedInputs []*Input
-	name            string
-
-	mx sync.RWMutex
+    Name() string
+    Start(ctx context.Context)
+    Input(name string) (*Input, error)
+    MustInput(name string) *Input
+    Output(name string) (*Output, error)
+    MustOutput(name string) *Output
+    AttachTo(output Module, outputName, inputName string) error
 }
 ```
 
-It has following methods:
+- `Start` — starts asynchronous processing
+- `Close` — gracefully stops the module (from `io.Closer`)
+- `Name` — returns the module name used in workflow construction
+- `Input` / `MustInput` — returns input by name (or panics)
+- `Output` / `MustOutput` — returns output by name (or panics)
+- `AttachTo` — connects this module's input to another module's output
 
-* `ConnectedInputs` - returns all connected inputs
-* `Push` - pushes message to all connected inputs
-* `Attach` - adds input to connected inputs array
-* `Name` - returns output name
+## BaseModule
 
-SDK has helper function `Connect`:
+`BaseModule` provides a default implementation to reduce boilerplate:
 
 ```go
-func Connect(outputModule, inputModule Module, outputName, inputName string) error 
+type BaseModule struct {
+    Log zerolog.Logger   // structured logger
+    G   workerpool.Group // goroutine group
+}
 ```
 
-The function receives `outputModule` and `inputModule`: modules which will be connected. Also it receives input and output names in that modules which will be connected.
+Usage:
+
+```go
+type MyModule struct {
+    modules.BaseModule
+}
+
+func NewMyModule() *MyModule {
+    m := &MyModule{
+        BaseModule: modules.New("my_module"),
+    }
+    m.CreateInput("input")
+    m.CreateOutput("output")
+    return m
+}
+
+func (m *MyModule) Start(ctx context.Context) {
+    m.G.GoCtx(ctx, m.listen)
+}
+
+func (m *MyModule) listen(ctx context.Context) {
+    input := m.MustInput("input")
+    output := m.MustOutput("output")
+    for {
+        select {
+        case <-ctx.Done():
+            return
+        case msg := <-input.Listen():
+            // process msg
+            output.Push(result)
+        }
+    }
+}
+```
+
+Helper methods:
+- `CreateInput(name string)` — creates an input with default capacity (1024)
+- `CreateInputWithCapacity(name string, cap int)` — creates an input with custom capacity
+- `CreateOutput(name string)` — creates an output
+
+## Inputs and Outputs
+
+### Input
+
+Channel-based message receiver:
+
+```go
+input := modules.NewInput("name")           // default capacity 1024
+input := modules.NewInputWithCapacity("name", 100)
+
+input.Push(msg)           // send message
+<-input.Listen()          // receive message
+input.Close()             // close channel
+```
+
+### Output
+
+Fan-out broadcaster to connected inputs:
+
+```go
+output := modules.NewOutput("name")
+
+output.Attach(input)      // connect an input
+output.Push(msg)           // broadcast to all connected inputs
+inputs := output.ConnectedInputs()
+```
+
+### Connecting Modules
+
+```go
+// Helper function
+modules.Connect(srcModule, dstModule, "output_name", "input_name")
+
+// Or directly
+dstModule.AttachTo(srcModule, "output_name", "input_name")
+```
 
 ## Workflow
 
-Modules can be united in workflow. Workflow is set of module which connected in certain seqeunce. To create `Workflow` you can call function `NewWorkflow`:
+Orchestrates multiple modules:
 
 ```go
-func NewWorkflow(modules ...Module) *Workflow
+wf := modules.NewWorkflow(module1, module2, module3)
+
+// Add more modules
+wf.Add(module4)
+wf.AddWithName(module5, "custom_name")
+
+// Connect modules by name
+wf.Connect("cron", "every_second", "processor", "input")
+
+// Start all modules
+wf.Start(ctx)
+
+// Retrieve module by name
+mod, err := wf.Get("cron")
 ```
 
-`Workflow` has following functions:
+## Built-in Modules
 
-* `Add` - adds module with name returning from its `Name` method
-* `AddWithName` - adds module with name passed to it
-* `Get` - returns module by name which module was created with
-* `Connect` - connects modules with certain names by names of its input and output
-* `Start` - starts all modules in workflow
+| Module | Description | Docs |
+|--------|-------------|------|
+| [gRPC](grpc/) | Client/server with subscriptions and metrics | [README](grpc/) |
+| [Cron](cron/) | Cron scheduler with named jobs | [README](cron/) |
+| [Zipper](zipper/) | Aggregates two streams by key | [README](zipper/) |
+| [Stopper](stopper/) | Cancels context on signal | see below |
+| [Printer](printer/) | Logs received messages | see below |
 
-## Implemented modules
+### Stopper
 
-SDK has some modules which can be used during workflow creation.
+Cancels context when a signal is received on its input:
 
-### gRPC
+```go
+ctx, cancel := context.WithCancel(context.Background())
+stop := stopper.NewModule(cancel)
+// Input name: stopper.InputName ("signal")
+```
 
-gRPC module where realized default client and server. Detailed docs can be found [here](/pkg/modules/grpc/).
+### Printer
 
-### Cron
+Debug module that logs all messages received on its input:
 
-Cron module implements cron scheduler. Detailed docs can be found [here](/pkg/modules/cron/).
+```go
+p := printer.NewPrinter()
+// Input name: printer.InputName ("input")
+```
+
+## Example
+
+```go
+cronModule, _ := cron.NewModule(cfg.Cron)
+customModule := NewCustomModule()
+
+modules.Connect(cronModule, customModule, "every_second", "every_second")
+modules.Connect(cronModule, customModule, "every_five_second", "every_five_second")
+
+ctx, cancel := context.WithCancel(context.Background())
+customModule.Start(ctx)
+cronModule.Start(ctx)
+
+// Wait for shutdown signal...
+
+cancel()
+customModule.Close()
+cronModule.Close()
+```
+
+Full example: [`examples/cron/`](/examples/cron/)

@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"github.com/dipdup-net/go-lib/database"
+	"github.com/dipdup-io/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage"
 )
 
