@@ -198,3 +198,107 @@ func TestMap_Keys(t *testing.T) {
 	require.Contains(t, keys, 1)
 	require.Contains(t, keys, 2)
 }
+
+func TestMap_All(t *testing.T) {
+	m := NewMap[int, string]()
+	expected := map[int]string{0: "all", 1: "sync", 2: "map"}
+	for k, v := range expected {
+		m.Set(k, v)
+	}
+
+	got := make(map[int]string)
+	for k, v := range m.All() {
+		_, seen := got[k]
+		require.False(t, seen, "All visited key %d twice", k)
+		got[k] = v
+	}
+
+	require.Equal(t, expected, got)
+}
+
+func TestMap_All_Break(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"all", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	count := 0
+	for range m.All() {
+		count++
+		break
+	}
+
+	require.Equal(t, 1, count)
+}
+
+func TestMap_All_Empty(t *testing.T) {
+	m := NewMap[int, string]()
+
+	for k, v := range m.All() {
+		t.Fatalf("All on empty map yielded %d=%s", k, v)
+	}
+}
+
+func TestMap_AllKeys(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"all", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	keys := make([]int, 0, 3)
+	for k := range m.AllKeys() {
+		keys = append(keys, k)
+	}
+
+	require.Len(t, keys, 3)
+	require.Contains(t, keys, 0)
+	require.Contains(t, keys, 1)
+	require.Contains(t, keys, 2)
+}
+
+func TestMap_AllKeys_Break(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"all", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	count := 0
+	for range m.AllKeys() {
+		count++
+		break
+	}
+
+	require.Equal(t, 1, count)
+}
+
+func TestMap_AllValues(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"all", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	values := make([]string, 0, 3)
+	for v := range m.AllValues() {
+		values = append(values, v)
+	}
+
+	require.Len(t, values, 3)
+	require.Contains(t, values, "all")
+	require.Contains(t, values, "sync")
+	require.Contains(t, values, "map")
+}
+
+func TestMap_AllValues_Break(t *testing.T) {
+	m := NewMap[int, string]()
+	for i, v := range [3]string{"all", "sync", "map"} {
+		m.Set(i, v)
+	}
+
+	count := 0
+	for range m.AllValues() {
+		count++
+		break
+	}
+
+	require.Equal(t, 1, count)
+}
