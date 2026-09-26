@@ -2,8 +2,8 @@ package grpc
 
 // ServerConfig - config for server
 type ServerConfig struct {
-	Bind    string `yaml:"bind" validate:"required,hostname_port"`
-	Log     bool   `yaml:"log" validate:"omitempty"`
-	Metrics bool   `yaml:"metrics" validate:"omitempty"`
-	RPS     int    `yaml:"rps" validate:"omitempty,min=1"`
+	Bind    string `validate:"required,hostname_port" yaml:"bind"`
+	Log     bool   `validate:"omitempty"              yaml:"log"`
+	Metrics bool   `validate:"omitempty"              yaml:"metrics"`
+	RPS     int    `validate:"omitempty,min=1"        yaml:"rps"`
 }

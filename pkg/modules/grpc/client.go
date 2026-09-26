@@ -165,9 +165,9 @@ func (s *Stream[T]) Subscribe(ctx context.Context) (uint64, error) {
 	}
 
 	s.wg.Add(1)
-	go s.listen(ctx, msg.Id)
+	go s.listen(ctx, msg.GetId())
 
-	return msg.Id, nil
+	return msg.GetId(), nil
 }
 
 // Listen - channel with received messages
@@ -175,7 +175,7 @@ func (s *Stream[T]) Listen() <-chan *T {
 	return s.data
 }
 
-func (s *Stream[T]) listen(ctx context.Context, id uint64) {
+func (s *Stream[T]) listen(ctx context.Context, _ uint64) {
 	defer s.wg.Done()
 
 	for {
@@ -187,7 +187,7 @@ func (s *Stream[T]) listen(ctx context.Context, id uint64) {
 			var msg T
 			err := s.stream.RecvMsg(&msg)
 			switch {
-			case err == io.EOF:
+			case errors.Is(err, io.EOF):
 				log.Info().Msg("connection to gRPC was closed")
 				return
 			case err != nil:

@@ -73,5 +73,5 @@ func (server *Server) SubscribeOnTime(req *pb.Request, stream pb.TimeService_Sub
 
 // UnsubscribeFromTime -
 func (server *Server) UnsubscribeFromTime(ctx context.Context, req *generalPB.UnsubscribeRequest) (*generalPB.UnsubscribeResponse, error) {
-	return grpc.DefaultUnsubscribe(ctx, server.subscriptions, req.Id)
+	return grpc.DefaultUnsubscribe(ctx, server.subscriptions, req.GetId())
 }

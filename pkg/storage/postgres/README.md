@@ -39,7 +39,7 @@ Methods:
 Generic implementation of `storage.Table[M]` for a single model type:
 
 ```go
-persons := postgres.NewTable[Person](storage.Connection())
+persons := postgres.NewTable[Person](storage.Connection().DB())
 
 person, err := persons.GetByID(ctx, 42)
 err = persons.Save(ctx, Person{Name: "John"})
@@ -49,7 +49,17 @@ items, err := persons.CursorList(ctx, lastID, 100, storage.SortOrderAsc, storage
 lastID, err := persons.LastID(ctx)
 ```
 
-`DB() *bun.DB` provides direct access to the bun database for building custom queries.
+`NewTable` accepts any `bun.IDB`: pass `storage.Connection().DB()` to run queries on the connection pool, or `tx.Tx()` to bind the table to a transaction:
+
+```go
+tx, err := storage.Transactable.BeginTransaction(ctx)
+txPersons := postgres.NewTable[Person](tx.Tx())
+err = txPersons.Save(ctx, Person{Name: "John"}) // visible only after tx.Flush
+```
+
+The table keeps the `bun.IDB` it was created with, so create it after the connection is established.
+
+`DB() bun.IDB` returns that `bun.IDB` for building custom queries; they run in the same transaction when the table is bound to one.
 
 ### Transaction
 

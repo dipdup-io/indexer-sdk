@@ -83,7 +83,7 @@ var abiToGo = map[string]string{
 	"int64":    "int64",
 	"function": "[24]byte",
 	"bool":     "bool",
-	"string":   "string",
+	"string":   StringType,
 	"bytes":    "[]byte",
 }
 
@@ -143,7 +143,7 @@ func generateField(title string, prop *js.JSONSchema, types map[string]goType) f
 
 	switch {
 	case prop.InternalType == "address":
-		f.Type = "string"
+		f.Type = StringType
 		f.UnpackType = AddressType
 	case strings.HasPrefix(prop.InternalType, "bytes"):
 		count := strings.TrimPrefix(prop.InternalType, "bytes")

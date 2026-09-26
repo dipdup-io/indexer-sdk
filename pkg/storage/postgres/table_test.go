@@ -33,7 +33,7 @@ type personTable struct {
 	*Table[*person]
 }
 
-func newPersonTable(conn *database.Bun) personTable {
+func newPersonTable(conn bun.IDB) personTable {
 	return personTable{
 		Table: NewTable[*person](conn),
 	}
@@ -88,7 +88,7 @@ func (s *TableTestSuite) SetupSuite() {
 
 	s.Require().NoError(err)
 
-	s.table = newPersonTable(s.db)
+	s.table = newPersonTable(s.db.DB())
 }
 
 // TearDownSuite -
@@ -317,6 +317,84 @@ func (s *TableTestSuite) TestTransaction() {
 	s.Require().EqualValues(updP.Id, updPerson.Id)
 	s.Require().Equal(updP.Name, updPerson.Name)
 	s.Require().EqualValues(updP.Age, updPerson.Age)
+}
+
+func (s *TableTestSuite) loadFixtures() {
+	db, err := sql.Open("postgres", s.psqlContainer.GetDSN())
+	s.Require().NoError(err)
+
+	fixtures, err := testfixtures.New(
+		testfixtures.Database(db),
+		testfixtures.Dialect("postgres"),
+		testfixtures.Directory("test/fixtures"),
+	)
+	s.Require().NoError(err)
+	s.Require().NoError(fixtures.Load())
+	s.Require().NoError(db.Close())
+}
+
+func (s *TableTestSuite) TestTableInTransactionRollback() {
+	s.loadFixtures()
+
+	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ctxCancel()
+
+	tx, err := NewTransactable(s.db).BeginTransaction(ctx)
+	s.Require().NoError(err)
+	txTable := newPersonTable(tx.Tx())
+
+	pers := person{Name: "Billy", Age: 12}
+	s.Require().NoError(txTable.Save(ctx, &pers))
+	s.Require().NotZero(pers.Id)
+
+	// visible inside the transaction
+	p, err := txTable.GetByID(ctx, uint64(pers.Id))
+	s.Require().NoError(err)
+	s.Require().Equal(pers.Name, p.Name)
+
+	lastId, err := txTable.LastID(ctx)
+	s.Require().NoError(err)
+	s.Require().EqualValues(pers.Id, lastId)
+
+	// not visible from the pool before commit
+	_, err = s.table.GetByID(ctx, uint64(pers.Id))
+	s.Require().True(s.table.IsNoRows(err), "unexpected error: %v", err)
+
+	s.Require().NoError(tx.Rollback(ctx))
+	s.Require().NoError(tx.Close(ctx))
+
+	_, err = s.table.GetByID(ctx, uint64(pers.Id))
+	s.Require().True(s.table.IsNoRows(err), "unexpected error: %v", err)
+}
+
+func (s *TableTestSuite) TestTableInTransactionCommit() {
+	s.loadFixtures()
+
+	ctx, ctxCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer ctxCancel()
+
+	tx, err := NewTransactable(s.db).BeginTransaction(ctx)
+	s.Require().NoError(err)
+	txTable := newPersonTable(tx.Tx())
+
+	pers := person{Name: "Billy", Age: 12}
+	s.Require().NoError(txTable.Save(ctx, &pers))
+
+	upd := person{Id: 1, Name: "Villy", Age: 22}
+	s.Require().NoError(txTable.Update(ctx, &upd))
+
+	s.Require().NoError(tx.Flush(ctx))
+	s.Require().NoError(tx.Close(ctx))
+
+	p, err := s.table.GetByID(ctx, uint64(pers.Id))
+	s.Require().NoError(err)
+	s.Require().Equal(pers.Name, p.Name)
+	s.Require().Equal(pers.Age, p.Age)
+
+	p, err = s.table.GetByID(ctx, 1)
+	s.Require().NoError(err)
+	s.Require().Equal(upd.Name, p.Name)
+	s.Require().Equal(upd.Age, p.Age)
 }
 
 func TestSuite_Run(t *testing.T) {
