@@ -23,7 +23,7 @@ func NewTimeSubscription() *TimeSubscription {
 func (ts *TimeSubscription) Filter(data time.Time) bool {
 	// here you can realize filters
 	// data is a structure which can be used for filtering rules
-	// for example, it can be a model of another module on which server subscirbed
+	// for example, it can be a model of another module on which server subscribed
 	// it returns true if message has to send.
 	return true
 }

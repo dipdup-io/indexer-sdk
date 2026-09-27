@@ -66,7 +66,7 @@ func TestMap_Range(t *testing.T) {
 	}
 
 	if err := m.Range(handler); err != nil {
-		t.Fatalf("error occured in Range %+v", err)
+		t.Fatalf("error occurred in Range %+v", err)
 	}
 
 	for k, v := range checkData {
@@ -92,7 +92,7 @@ func TestMap_ConcurrentRange(t *testing.T) {
 	}()
 
 	for g := int64(runtime.GOMAXPROCS(0)); g > 0; g-- {
-		r := rand.New(rand.NewSource(g))
+		r := rand.New(rand.NewSource(g)) //nolint:gosec // test-only randomness, not security-sensitive
 		wg.Add(1)
 		go func(g int64) {
 			defer wg.Done()
@@ -132,7 +132,7 @@ func TestMap_ConcurrentRange(t *testing.T) {
 		}
 
 		if err != nil {
-			t.Fatalf("error occured in Range %+v", err)
+			t.Fatalf("error occurred in Range %+v", err)
 		}
 	}
 }
@@ -152,7 +152,7 @@ func TestMap_Clear(t *testing.T) {
 	})
 
 	if err != nil {
-		t.Fatalf("error occured in checking length of Range %+v", err)
+		t.Fatalf("error occurred in checking length of Range %+v", err)
 	}
 
 	if length != 0 {

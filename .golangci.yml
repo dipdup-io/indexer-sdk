@@ -2,10 +2,48 @@ version: "2"
 linters:
   enable:
     - containedctx
+    - copyloopvar
     - goconst
     - gocritic
+    - gosec
+    - makezero
+    - mirror
+    - misspell
+    - musttag
+    - noctx
     - prealloc
+    - protogetter
+    - tagalign
     - unconvert
+    - usetesting
+    - zerologlint
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - unparam
+    - asciicheck
+    - bodyclose
+    - dogsled
+    - errcheck
+    - errorlint
+    - forcetypeassert
+    - goprintffuncname
+  settings:
+    gosec:
+      excludes:
+        - G115
+    goconst:
+      match-constant: true
+      min-len: 3
+      min-occurrences: 3
+      ignore-calls: true
+      numbers: false
+      min: 3
+      max: 3
+      find-duplicates: false
+      eval-const-expressions: false
+      ignore-tests: true
   exclusions:
     generated: lax
     presets:

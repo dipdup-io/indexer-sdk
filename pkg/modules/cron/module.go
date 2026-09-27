@@ -52,7 +52,7 @@ func (module *Module) Close() error {
 	return nil
 }
 
-func (module *Module) notify(job, pattern string) {
+func (module *Module) notify(job, _ string) {
 	output, err := module.Output(job)
 	if err != nil {
 		module.Log.Panic().Msg("while getting output for notification")

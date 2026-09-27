@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,20 +12,17 @@ func logCalls() logging.Logger {
 	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
 		l := log.With().Ctx(ctx).Str("module", "grpc").Logger()
 
-		event := new(zerolog.Event)
 		switch lvl {
 		case logging.LevelDebug:
-			event = l.Debug()
+			l.Debug().Fields(fields).Msg(msg)
 		case logging.LevelInfo:
-			event = l.Info()
+			l.Info().Fields(fields).Msg(msg)
 		case logging.LevelWarn:
-			event = l.Warn()
+			l.Warn().Fields(fields).Msg(msg)
 		case logging.LevelError:
-			event = l.Error()
+			l.Error().Fields(fields).Msg(msg)
 		default:
 			panic(fmt.Sprintf("unknown level %v", lvl))
 		}
-
-		event.Fields(fields).Msg(msg)
 	})
 }

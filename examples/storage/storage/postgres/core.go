@@ -27,7 +27,7 @@ func Create(ctx context.Context, cfg config.Database) (*Storage, error) {
 
 	return &Storage{
 		Storage: strg,
-		Persons: NewPerson(strg.Connection()),
+		Persons: NewPerson(strg.Connection().DB()),
 	}, nil
 }
 

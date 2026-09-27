@@ -3,9 +3,9 @@ package postgres
 import (
 	"context"
 
-	"github.com/dipdup-io/go-lib/database"
 	"github.com/dipdup-net/indexer-sdk/examples/storage/storage"
 	"github.com/dipdup-net/indexer-sdk/pkg/storage/postgres"
+	"github.com/uptrace/bun"
 )
 
 // Person -
@@ -14,7 +14,7 @@ type Person struct {
 }
 
 // NewPerson -
-func NewPerson(db *database.Bun) *Person {
+func NewPerson(db bun.IDB) *Person {
 	return &Person{
 		Table: postgres.NewTable[storage.Person](db),
 	}

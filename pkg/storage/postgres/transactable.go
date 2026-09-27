@@ -29,7 +29,11 @@ func (t *Transactable) BeginTransaction(ctx context.Context) (storage.Transactio
 
 	var pgxConn *pgx.Conn
 	if err := bunConn.Raw(func(c any) error {
-		pgxConn = c.(*stdlib.Conn).Conn()
+		conn, ok := c.(*stdlib.Conn)
+		if !ok {
+			return errors.Errorf("invalid connection type: %T", c)
+		}
+		pgxConn = conn.Conn()
 		return nil
 	}); err != nil {
 		return nil, errors.Wrap(err, "raw")

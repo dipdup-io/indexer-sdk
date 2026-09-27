@@ -133,7 +133,7 @@ storage, err := postgres.Create(ctx, cfg, func(ctx context.Context, conn *databa
 defer storage.Close()
 
 // Use typed tables
-persons := postgres.NewTable[Person](storage.Connection())
+persons := postgres.NewTable[Person](storage.Connection().DB())
 err = persons.Save(ctx, Person{Name: "John", Phone: "+1234567890"})
 
 // Cursor pagination
@@ -143,6 +143,11 @@ items, err := persons.CursorList(ctx, lastID, 100, storage.SortOrderAsc, storage
 tx, err := storage.Transactable.BeginTransaction(ctx)
 _ = tx.Add(ctx, person1)
 _ = tx.Add(ctx, person2)
+
+// Table bound to the transaction
+txPersons := postgres.NewTable[Person](tx.Tx())
+_ = txPersons.Save(ctx, person3)
+
 _ = tx.Flush(ctx)
 _ = tx.Close(ctx)
 ```

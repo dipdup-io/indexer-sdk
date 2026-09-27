@@ -96,7 +96,10 @@ func NewServer(cfg *ServerConfig) (*Server, error) {
 }
 
 func newMetricsServer(httpAddr string) (*http.Server, *grpcprom.ServerMetrics) {
-	httpSrv := &http.Server{Addr: httpAddr}
+	httpSrv := &http.Server{
+		Addr:              httpAddr,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 	m := http.NewServeMux()
 
 	srvMetrics := grpcprom.NewServerMetrics(
@@ -122,7 +125,7 @@ func (module *Server) Start(ctx context.Context) {
 	go module.grpc(ctx)
 
 	module.wg.Add(1)
-	go module.startMetricsServer(ctx)
+	go module.startMetricsServer()
 }
 
 func (module *Server) grpc(ctx context.Context) {
@@ -130,7 +133,8 @@ func (module *Server) grpc(ctx context.Context) {
 
 	log.Info().Str("bind", module.bind).Msg("running grpc...")
 
-	listener, err := net.Listen("tcp", module.bind)
+	var lc net.ListenConfig
+	listener, err := lc.Listen(ctx, "tcp", module.bind)
 	if err != nil {
 		log.Err(err).Msg("net.Listen")
 		return
@@ -140,7 +144,7 @@ func (module *Server) grpc(ctx context.Context) {
 	}
 }
 
-func (module *Server) startMetricsServer(ctx context.Context) {
+func (module *Server) startMetricsServer() {
 	defer module.wg.Done()
 
 	if module.metricsServer == nil {
@@ -214,7 +218,7 @@ loop:
 				break loop
 			}
 			if err := stream.Send(msg); err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					break loop
 				} else {
 					log.Err(err).Msg("sending message error")

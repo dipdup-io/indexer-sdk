@@ -13,6 +13,12 @@ import (
 	"github.com/iancoleman/strcase"
 )
 
+const (
+	tmplKeyModels      = "Models"
+	tmplKeyPackageName = "PackageName"
+	tmplKeyApp         = "App"
+)
+
 type generateResult struct {
 	methods map[string]string
 	events  map[string]string
@@ -84,59 +90,59 @@ func generate(args cmdLine, schema []map[string]js.Type) error {
 
 func applyTemplates(args cmdLine, dirs *projectDirs, result *generateResult) error {
 	if err := generateFromTemplate("core.go", "postgres_core.tmpl", dirs.postgres, map[string]any{
-		"Models":      result.models,
-		"PackageName": args.packageName,
+		tmplKeyModels:      result.models,
+		tmplKeyPackageName: args.packageName,
 	}, true); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("postgres.go", "postgres_module.tmpl", dirs.cmd, map[string]any{
-		"Models":      result.models,
-		"PackageName": args.packageName,
+		tmplKeyModels:      result.models,
+		tmplKeyPackageName: args.packageName,
 	}, true); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("decoder.go", "decoder.tmpl", dirs.cmd, map[string]any{
-		"Events":      result.events,
-		"Methods":     result.methods,
-		"PackageName": args.packageName,
-		"Models":      result.models,
+		"Events":           result.events,
+		"Methods":          result.methods,
+		tmplKeyPackageName: args.packageName,
+		tmplKeyModels:      result.models,
 	}, true); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("main.go", "main.tmpl", dirs.cmd, map[string]any{
-		"Address":     args.address,
-		"Models":      result.models,
-		"PackageName": args.packageName,
-		"App":         args.appName,
+		"Address":          args.address,
+		tmplKeyModels:      result.models,
+		tmplKeyPackageName: args.packageName,
+		tmplKeyApp:         args.appName,
 	}, true); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("dipdup.yml", "config.tmpl", dirs.build, map[string]any{
-		"Address": args.address,
-		"App":     args.appName,
+		"Address":  args.address,
+		tmplKeyApp: args.appName,
 	}, false); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("Dockerfile", "Dockerfile.tmpl", dirs.build, map[string]any{
-		"App":         args.appName,
-		"PackageName": args.packageName,
+		tmplKeyApp:         args.appName,
+		tmplKeyPackageName: args.packageName,
 	}, false); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("docker-compose.yml", "compose.tmpl", dirs.root, map[string]any{
-		"App": args.appName,
+		tmplKeyApp: args.appName,
 	}, false); err != nil {
 		return err
 	}
 
 	if err := generateFromTemplate("Makefile", "makefile.tmpl", dirs.root, map[string]any{
-		"App": args.appName,
+		tmplKeyApp: args.appName,
 	}, false); err != nil {
 		return err
 	}
@@ -177,9 +183,9 @@ func generateModels(args cmdLine, dirs *projectDirs, schema map[string]js.Type) 
 
 func generateStorageBySchema(typ goType, name, dir, templateName, packageName string, types map[string]goType) error {
 	return generateFromTemplate(strcase.ToSnake(name)+".go", templateName, dir, map[string]any{
-		"GoType":      typ,
-		"PackageName": packageName,
-		"Nested":      types,
+		"GoType":           typ,
+		tmplKeyPackageName: packageName,
+		"Nested":           types,
 	}, true)
 }
 
