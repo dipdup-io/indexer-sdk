@@ -33,7 +33,7 @@ func (s *Table[M]) Update(ctx context.Context, m M) error {
 }
 
 // List - returns array of rows
-func (s *Table[M]) List(ctx context.Context, limit, offset uint64, order storage.SortOrder) ([]M, error) {
+func (s *Table[M]) List(ctx context.Context, limit, offset int64, order storage.SortOrder) ([]M, error) {
 	var models []M
 	query := s.db.NewSelect().Model(&models)
 	query = Pagination(query, limit, offset, order)
@@ -71,7 +71,7 @@ func (s *Table[M]) DB() bun.IDB {
 }
 
 // CursorList - returns array of rows by cursor pagination
-func (s *Table[M]) CursorList(ctx context.Context, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) ([]M, error) {
+func (s *Table[M]) CursorList(ctx context.Context, id uint64, limit int64, order storage.SortOrder, cmp storage.Comparator) ([]M, error) {
 	var models []M
 	query := s.db.NewSelect().Model(&models)
 	query = CursorPagination(query, id, limit, order, cmp)

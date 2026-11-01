@@ -9,12 +9,12 @@ import (
 // Pagination - adds limit, offset and sort to query. Query being like this:
 //
 //	query.Limit(limit).Offset(offset).Order("id ?", order)
-func Pagination(query *bun.SelectQuery, limit, offset uint64, order storage.SortOrder) *bun.SelectQuery {
+func Pagination(query *bun.SelectQuery, limit, offset int64, order storage.SortOrder) *bun.SelectQuery {
 	if limit == 0 {
 		limit = 10
 	}
 
-	query.Limit(int(limit)).Offset(int(offset))
+	query.Limit(limit).Offset(offset)
 
 	switch order {
 	case storage.SortOrderAsc:
@@ -30,7 +30,7 @@ func Pagination(query *bun.SelectQuery, limit, offset uint64, order storage.Sort
 // CursorPagination - adds limit, id where clause and sort to query. Query being like this:
 //
 //	query.Where("id > ?", id).Limit(limit).Order("id ?", order)
-func CursorPagination(query *bun.SelectQuery, id, limit uint64, order storage.SortOrder, cmp storage.Comparator) *bun.SelectQuery {
+func CursorPagination(query *bun.SelectQuery, id uint64, limit int64, order storage.SortOrder, cmp storage.Comparator) *bun.SelectQuery {
 	if id > 0 {
 		query.Where("id ? ?", bun.Safe(cmp.String()), id)
 	}
@@ -39,7 +39,7 @@ func CursorPagination(query *bun.SelectQuery, id, limit uint64, order storage.So
 		limit = 10
 	}
 
-	query.Limit(int(limit))
+	query.Limit(limit)
 
 	switch order {
 	case storage.SortOrderAsc:
