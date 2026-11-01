@@ -24,7 +24,7 @@ func Create(ctx context.Context, cfg config.Database, init Init) (*Storage, erro
 
 	database.Wait(ctx, conn, time.Second*5)
 
-	conn.DB().AddQueryHook(&logQueryHook{})
+	conn.WithLogger(&logQueryHook{})
 
 	if init != nil {
 		if err := init(ctx, conn); err != nil {

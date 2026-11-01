@@ -55,8 +55,8 @@ type Table[M Model] interface {
 	GetByID(ctx context.Context, id uint64) (M, error)
 	Save(ctx context.Context, m M) error
 	Update(ctx context.Context, m M) error
-	List(ctx context.Context, limit, offset uint64, order SortOrder) ([]M, error)
-	CursorList(ctx context.Context, id, limit uint64, order SortOrder, cmp Comparator) ([]M, error)
+	List(ctx context.Context, limit, offset int64, order SortOrder) ([]M, error)
+	CursorList(ctx context.Context, id uint64, limit int64, order SortOrder, cmp Comparator) ([]M, error)
 	LastID(ctx context.Context) (uint64, error)
 
 	IsNoRows(err error) bool
